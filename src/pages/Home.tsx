@@ -13,12 +13,34 @@ export const Home: React.FC = () => {
     select: (data) => data.slice(0, 8),
   });
 
-  const { data: settings } = useQuery({
+  const { data: settings, isLoading: settingsLoading } = useQuery({
     queryKey: ['settings'],
     queryFn: getSettings,
   });
 
   const bannerUrl = settings?.banner_url ? getStorageUrl(settings.banner_url) : null;
+  const [imageSrc, setImageSrc] = React.useState<string>("");
+  const [isImageLoading, setIsImageLoading] = React.useState<boolean>(true);
+
+  React.useEffect(() => {
+    if (bannerUrl) {
+      setIsImageLoading(true);
+      const img = new Image();
+      img.src = bannerUrl;
+      img.onload = () => {
+        setImageSrc(bannerUrl);
+        setIsImageLoading(false);
+      };
+      img.onerror = () => {
+        setIsImageLoading(false);
+      };
+    } else {
+      setImageSrc("");
+      setIsImageLoading(false);
+    }
+  }, [bannerUrl]);
+
+  const isBannerReady = !settingsLoading && !isImageLoading;
 
   const philosophyIcons = [
     <Mountain className="w-8 h-8 text-[#707040]" />,
@@ -33,20 +55,20 @@ export const Home: React.FC = () => {
         className="relative py-48 flex flex-col items-center text-center px-6 overflow-hidden min-h-[85vh] justify-center"
       >
         {/* Background Image & Overlay */}
-        {bannerUrl ? (
-          <div className="absolute inset-0 z-0">
-            <img 
-              src={bannerUrl} 
-              alt="Banner" 
-              className="w-full h-full object-cover"
-              referrerPolicy="no-referrer"
-            />
-            <div className="absolute inset-0 bg-white/40 backdrop-blur-[2px]"></div>
-            <div className="absolute inset-0 bg-gradient-to-b from-white/10 via-transparent to-[#F9F8F4]"></div>
-          </div>
-        ) : (
-          <div className="absolute inset-0 bg-[#F9F8F4] z-0"></div>
-        )}
+        <div className="absolute inset-0 bg-[#F9F8F4] z-0">
+          {isBannerReady && imageSrc ? (
+            <div className="w-full h-full relative">
+              <img 
+                src={imageSrc} 
+                alt="Banner" 
+                className="w-full h-full object-cover"
+                referrerPolicy="no-referrer"
+              />
+              <div className="absolute inset-0 bg-white/40 backdrop-blur-[2px]"></div>
+              <div className="absolute inset-0 bg-gradient-to-b from-white/10 via-transparent to-[#F9F8F4]"></div>
+            </div>
+          ) : null}
+        </div>
 
         <motion.div
           initial={{ opacity: 0, y: 30 }}
