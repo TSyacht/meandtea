@@ -137,20 +137,25 @@ export const ProductDetail: React.FC = () => {
     };
   }, [slug]); // 確保依賴項僅包含 slug
 
+  const getShareUrl = () => {
+    const officialOrigin = 'https://meandtea.vercel.app';
+    return window.location.href.replace(window.location.origin, officialOrigin);
+  };
+
   const shareOnFacebook = () => {
-    window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`, '_blank');
+    window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(getShareUrl())}`, '_blank');
   };
 
   const shareOnLine = () => {
-    window.open(`https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(window.location.href)}`, '_blank');
+    window.open(`https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(getShareUrl())}`, '_blank');
   };
 
   const shareOnThreads = () => {
-    window.open(`https://www.threads.net/intent/post?text=${encodeURIComponent(product?.name || '')}%20${encodeURIComponent(window.location.href)}`, '_blank');
+    window.open(`https://www.threads.net/intent/post?text=${encodeURIComponent(product?.name || '')}%20${encodeURIComponent(getShareUrl())}`, '_blank');
   };
 
   const copyToClipboard = () => {
-    navigator.clipboard.writeText(window.location.href);
+    navigator.clipboard.writeText(getShareUrl());
     setCopySuccess(true);
     setTimeout(() => setCopySuccess(false), 2000);
   };

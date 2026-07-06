@@ -269,7 +269,8 @@ export const BeginnerVillage: React.FC = () => {
   };
 
   const triggerSocialShare = (platform: string, imageUrl: string, invitationText: string, title?: string, description?: string) => {
-    const pageUrl = window.location.origin + '/beginner-village';
+    const officialOrigin = 'https://meandtea.vercel.app';
+    const pageUrl = officialOrigin + '/beginner-village';
     
     // Construct dynamic parameters to have the server render standard OG tags
     let queryParts = `img=${encodeURIComponent(imageUrl)}`;
