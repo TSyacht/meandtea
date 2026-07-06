@@ -128,7 +128,7 @@ const DEFAULT_SETTINGS: SiteSettings = {
   faq_contact_title: '還有其他問題嗎？',
   faq_contact_desc: '我們的客服團隊隨時準備為您提供協助，無論是產品諮詢還是訂單問題。',
   faq_contact_url: '#',
-  cat_banner_url: 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=1920&q=80',
+  cat_banner_url: '',
 
   // Custom redirects & buttons
   philosophy_btn_text: '探索茶草共生的故事 ➔',

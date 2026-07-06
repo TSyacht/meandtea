@@ -23,7 +23,7 @@ export const CatsDaily: React.FC = () => {
     );
   }
 
-  const catBanner = settings.cat_banner_url || 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=1920&q=80';
+  const catBanner = settings.cat_banner_url || 'https://images.unsplash.com/photo-1519052537078-e6302a4968d4?auto=format&fit=crop&w=1920&q=80';
   const duties = settings.cat_manager_duties || [];
   const profileItems = settings.cat_manager_profile_items || [];
 
@@ -163,7 +163,7 @@ export const CatsDaily: React.FC = () => {
               <div className="relative group/avatar">
                 <div className="w-24 h-24 sm:w-28 sm:h-28 lg:w-32 lg:h-32 rounded-full bg-[#E5DFD3] border-4 border-white shadow-lg flex items-center justify-center overflow-hidden transition-all duration-300 group-hover/avatar:shadow-xl">
                   <img 
-                    src="https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=400&h=400&q=80" 
+                    src="https://images.unsplash.com/photo-1519052537078-e6302a4968d4?auto=format&fit=crop&w=400&h=400&q=80" 
                     alt="貓店長小花" 
                     className="w-full h-full object-cover transition-transform duration-500 group-hover/avatar:scale-110 pointer-events-none select-none"
                     referrerPolicy="no-referrer"

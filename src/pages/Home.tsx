@@ -42,6 +42,30 @@ export const Home: React.FC = () => {
 
   const isBannerReady = !settingsLoading && !isImageLoading;
 
+  const catBannerUrl = settings?.cat_banner_url ? getStorageUrl(settings.cat_banner_url) : null;
+  const [catImageSrc, setCatImageSrc] = React.useState<string>("");
+  const [isCatImageLoading, setIsCatImageLoading] = React.useState<boolean>(true);
+
+  React.useEffect(() => {
+    if (catBannerUrl) {
+      setIsCatImageLoading(true);
+      const img = new Image();
+      img.src = catBannerUrl;
+      img.onload = () => {
+        setCatImageSrc(catBannerUrl);
+        setIsCatImageLoading(false);
+      };
+      img.onerror = () => {
+        setIsCatImageLoading(false);
+      };
+    } else {
+      setCatImageSrc("");
+      setIsCatImageLoading(false);
+    }
+  }, [catBannerUrl]);
+
+  const isCatBannerReady = !settingsLoading && !isCatImageLoading;
+
   const philosophyIcons = [
     <Mountain className="w-8 h-8 text-[#707040]" />,
     <Leaf className="w-8 h-8 text-[#707040]" />,
@@ -103,20 +127,22 @@ export const Home: React.FC = () => {
       <section className="py-24 bg-[#F9F8F4] overflow-hidden border-b border-stone-100">
         <div className="max-w-6xl mx-auto px-6">
           {/* Banner 圖片區 */}
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.98 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 1.0, ease: "easeOut" }}
-            className="w-full aspect-[16/9] md:aspect-[21/9] rounded-[2.5rem] overflow-hidden shadow-md border border-stone-100 max-h-[500px]"
+          <div 
+            className={`transition-all duration-500 ease-out overflow-hidden ${
+              isCatBannerReady && catImageSrc
+                ? "w-full aspect-[16/9] md:aspect-[21/9] rounded-[2.5rem] shadow-md border border-stone-100 max-h-[500px] opacity-100 animate-in fade-in duration-500"
+                : "min-h-0 h-0 opacity-0 border-0 shadow-none pointer-events-none"
+            }`}
           >
-            <img 
-              src={settings?.cat_banner_url ? getStorageUrl(settings.cat_banner_url) : 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=1920&q=80'} 
-              alt="店長貓的巡邏領地" 
-              className="w-full h-full object-cover select-none pointer-events-none"
-              referrerPolicy="no-referrer"
-            />
-          </motion.div>
+            {isCatBannerReady && catImageSrc ? (
+              <img 
+                src={catImageSrc} 
+                alt="店長貓的巡邏領地" 
+                className="w-full h-full object-cover select-none pointer-events-none"
+                referrerPolicy="no-referrer"
+              />
+            ) : null}
+          </div>
 
           {/* 文字與按鈕區 */}
           <div className="mt-12 text-center max-w-3xl mx-auto space-y-8">
