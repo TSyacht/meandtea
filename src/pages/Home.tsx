@@ -52,23 +52,29 @@ export const Home: React.FC = () => {
     <div className="bg-[#F9F8F4] min-h-screen">
       {/* Hero Section */}
       <section 
-        className="relative py-48 flex flex-col items-center text-center px-6 overflow-hidden min-h-[85vh] justify-center"
+        className={`relative flex flex-col items-center text-center px-6 overflow-hidden justify-center transition-all duration-1000 ease-out ${
+          isBannerReady 
+            ? 'py-48 min-h-[85vh] opacity-100' 
+            : 'py-0 min-h-0 h-0 opacity-0 pointer-events-none'
+        }`}
       >
         {/* Background Image & Overlay */}
-        <div className="absolute inset-0 bg-[#F9F8F4] z-0">
-          {isBannerReady && imageSrc ? (
-            <div className="w-full h-full relative">
-              <img 
-                src={imageSrc} 
-                alt="Banner" 
-                className="w-full h-full object-cover"
-                referrerPolicy="no-referrer"
-              />
-              <div className="absolute inset-0 bg-white/40 backdrop-blur-[2px]"></div>
-              <div className="absolute inset-0 bg-gradient-to-b from-white/10 via-transparent to-[#F9F8F4]"></div>
-            </div>
-          ) : null}
-        </div>
+        {isBannerReady && (
+          <div className="absolute inset-0 z-0">
+            {imageSrc && (
+              <div className="w-full h-full relative">
+                <img 
+                  src={imageSrc} 
+                  alt="Banner" 
+                  className="w-full h-full object-cover"
+                  referrerPolicy="no-referrer"
+                />
+                <div className="absolute inset-0 bg-white/40 backdrop-blur-[2px]"></div>
+                <div className="absolute inset-0 bg-gradient-to-b from-white/10 via-transparent to-[#F9F8F4]"></div>
+              </div>
+            )}
+          </div>
+        )}
 
         <motion.div
           initial={{ opacity: 0, y: 30 }}
