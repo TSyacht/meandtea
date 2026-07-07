@@ -18,6 +18,7 @@ import { Privacy } from './pages/Privacy';
 import { ProductDetail } from './pages/ProductDetail';
 import { Register } from './Register';
 import { Profile } from './Profile';
+import { AuthCallback } from './pages/AuthCallback';
 import { MemberOrders } from './pages/MemberOrders';
 import { AdminLayout } from './layouts/AdminLayout';
 import { MainLayout } from './layouts/MainLayout';
@@ -115,6 +116,7 @@ export default function App() {
             <Route path="/" element={<MainLayout><Home /></MainLayout>} />
             <Route path="/login" element={<MainLayout><Login /></MainLayout>} />
             <Route path="/register" element={<MainLayout><Register /></MainLayout>} />
+            <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/about" element={<Navigate to="/about/meet-miye" replace />} />
             <Route path="/about/meet-miye" element={<MainLayout><MeetMiye /></MainLayout>} />
             <Route path="/about/coexistence" element={<MainLayout><Coexistence /></MainLayout>} />

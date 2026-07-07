@@ -126,8 +126,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // 監聽來自登入彈出視窗的跨視窗訊息 (Message Event Listener)
     const handleMessage = async (event: MessageEvent) => {
       const origin = event.origin;
-      // 驗證來源是否為 AI Studio 預覽網址或本地開發伺服器
-      if (!origin.endsWith('.run.app') && !origin.includes('localhost') && !origin.includes('127.0.0.1')) {
+      // 驗證來源是否為當前網域、AI Studio 預覽網址、Vercel 部署或本地開發伺服器
+      if (
+        origin !== window.location.origin &&
+        !origin.endsWith('.run.app') &&
+        !origin.endsWith('.vercel.app') &&
+        !origin.includes('localhost') &&
+        !origin.includes('127.0.0.1')
+      ) {
         return;
       }
 
