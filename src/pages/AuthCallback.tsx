@@ -1,8 +1,8 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '../lib/supabase'; // 請確保路徑正確
+import { supabase } from '../lib/supabaseClient'; // Corrected path to supabaseClient
 
-const AuthCallback: React.FC = () => {
+export const AuthCallback: React.FC = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -27,5 +27,3 @@ const AuthCallback: React.FC = () => {
     </div>
   );
 };
-
-export default AuthCallback;
