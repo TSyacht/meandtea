@@ -19,8 +19,8 @@ export const supabaseAnonKey = getSupabaseAnonKey();
 
 // If no custom env vars exist, we fallback to the default template credentials to avoid compilation crashing,
 // but we prioritize custom env variables 100% and print a clear warning if they are missing.
-const activeUrl = supabaseUrl || '';
-const activeAnonKey = supabaseAnonKey || '';
+const activeUrl = supabaseUrl || 'https://ftqyzxrvghfdspgjampd.supabase.co';
+const activeAnonKey = supabaseAnonKey || 'sb_publishable_PRsJAks9Nw0fcT7Bvd0Y2Q_abzmKtne';
 
 if (!supabaseUrl) {
   console.warn('【覓野茶】Supabase URL 尚未在 AI Studio 的 Secrets 面板中設定，目前自動使用預設專案。請到右上角 Gear 設定面板配置 VITE_SUPABASE_URL 與 VITE_SUPABASE_ANON_KEY！');
