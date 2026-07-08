@@ -14,7 +14,24 @@ export const AuthCallback: React.FC = () => {
         console.error("登入失敗", error);
         navigate('/login'); // 失敗導回登入頁
       } else {
-        navigate('/'); // 成功導回首頁
+        // 成功獲取 Session 後
+        if (window.opener) {
+          try {
+            // 傳送登入成功 Hash 訊息給父視窗，讓父視窗能立即設定 Session 與顯示 Toast
+            window.opener.postMessage({
+              type: 'OAUTH_AUTH_SUCCESS',
+              hash: window.location.hash,
+              search: window.location.search
+            }, window.location.origin);
+          } catch (e) {
+            console.error("傳送訊息給父視窗時發生錯誤:", e);
+          }
+          // 關閉彈出視窗
+          window.close();
+        } else {
+          // 非彈出視窗，直接導向回首頁
+          navigate('/');
+        }
       }
     };
 
