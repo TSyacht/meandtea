@@ -232,9 +232,53 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     window.addEventListener('message', handleMessage);
 
+    // 監聽跨頁面/跨視窗的 localStorage 變化（當 window.opener 遺失時的完美備援方案）
+    const handleStorageChange = async (event: StorageEvent) => {
+      if (event.key === 'miye_oauth_success' && event.newValue) {
+        try {
+          const oauthData = JSON.parse(event.newValue);
+          const hash = oauthData.hash;
+          if (hash) {
+            const params = new URLSearchParams(hash.replace('#', '?'));
+            const access_token = params.get('access_token');
+            const refresh_token = params.get('refresh_token');
+
+            if (access_token && refresh_token) {
+              setLoading(true);
+              try {
+                const { data, error } = await supabase.auth.setSession({
+                  access_token,
+                  refresh_token,
+                });
+                if (error) throw error;
+                if (data.session) {
+                  setSession(data.session);
+                  setUser(data.session.user);
+                  await fetchProfile(data.session.user.id);
+                  toast.success('Google 快速登入成功！歡迎回來，覓野茶事。🍵');
+                }
+              } catch (err: any) {
+                console.error('Google Auth Session Error (via storage):', err);
+                toast.error('Google 登入失敗：' + (err.message || '無法解析登入資訊'));
+              } finally {
+                setLoading(false);
+                // 清理 key 避免重複觸發
+                localStorage.removeItem('miye_oauth_success');
+              }
+            }
+          }
+        } catch (e) {
+          console.error('解析 Storage 事件失敗:', e);
+        }
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+
     return () => {
       subscription.unsubscribe();
       window.removeEventListener('message', handleMessage);
+      window.removeEventListener('storage', handleStorageChange);
     };
   }, []);
 
