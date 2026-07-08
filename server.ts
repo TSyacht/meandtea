@@ -1,5 +1,4 @@
 import express from 'express';
-import { createServer as createViteServer } from 'vite';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
@@ -240,17 +239,39 @@ app.use(express.json());
             <p>正在引導回覓野茶官網，請稍候...</p>
             <script>
               if (window.opener) {
-                window.opener.postMessage({ 
-                  type: 'LINE_AUTH_SUCCESS',
+                try {
+                  window.opener.postMessage({ 
+                    type: 'LINE_AUTH_SUCCESS',
+                    email: '${email}',
+                    name: '${name}',
+                    picture: '${picture}',
+                    lineId: '${lineId}'
+                  }, '*');
+                } catch (e) {
+                  console.error('postMessage error:', e);
+                }
+              }
+
+              // 跨分頁 localStorage 備援機制
+              try {
+                localStorage.setItem('miye_line_oauth_success', JSON.stringify({
+                  timestamp: Date.now(),
                   email: '${email}',
                   name: '${name}',
                   picture: '${picture}',
                   lineId: '${lineId}'
-                }, '*');
-                window.close();
-              } else {
-                window.location.href = '/';
+                }));
+              } catch (e) {
+                console.error('localStorage error:', e);
               }
+
+              // 關閉視窗
+              window.close();
+
+              // 備援導向
+              setTimeout(() => {
+                window.location.href = '/';
+              }, 1000);
             </script>
           </body>
         </html>
@@ -676,6 +697,7 @@ app.use(express.json());
 
   // Vite middleware for development
   if (process.env.NODE_ENV !== 'production') {
+    const { createServer: createViteServer } = await import('vite');
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: 'spa',

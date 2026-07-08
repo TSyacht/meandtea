@@ -270,6 +270,74 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         } catch (e) {
           console.error('解析 Storage 事件失敗:', e);
         }
+      } else if (event.key === 'miye_line_oauth_success' && event.newValue) {
+        try {
+          const oauthData = JSON.parse(event.newValue);
+          const { email, name, picture, lineId } = oauthData;
+          if (lineId) {
+            setLoading(true);
+            const linePassword = `LINE_${lineId}_MIYE_SECURE_PASS_2026`;
+            try {
+              // 1. 嘗試直接以 LINE ID 做為密碼登入
+              const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+                email,
+                password: linePassword,
+              });
+
+              if (signInError) {
+                // 2. 登入失敗通常代表帳號不存在，因此為其自動註冊
+                const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+                  email,
+                  password: linePassword,
+                  options: {
+                    data: {
+                      full_name: name,
+                      avatar_url: picture,
+                    },
+                  },
+                });
+
+                if (signUpError) throw signUpError;
+
+                if (signUpData.session) {
+                  setSession(signUpData.session);
+                  setUser(signUpData.session.user);
+                  await fetchProfile(signUpData.session.user.id);
+                  toast.success('LINE 註冊與登入成功！歡迎加入覓野茶事。🍵');
+                } else {
+                  // 再次嘗試登入（以防信箱驗證設定的預設限制）
+                  const { data: retryData, error: retryError } = await supabase.auth.signInWithPassword({
+                    email,
+                    password: linePassword,
+                  });
+                  if (retryError) {
+                    throw new Error('此專案需要電子郵件確認，請檢查您的信箱或手動登入。');
+                  }
+                  if (retryData.session) {
+                    setSession(retryData.session);
+                    setUser(retryData.session.user);
+                    await fetchProfile(retryData.session.user.id);
+                    toast.success('LINE 登入成功！🍵');
+                  }
+                }
+              } else if (signInData.session) {
+                setSession(signInData.session);
+                setUser(signInData.session.user);
+                await fetchProfile(signInData.session.user.id);
+                toast.success('LINE 快速登入成功！歡迎回來，覓野茶事。🍵');
+              }
+            } catch (err: any) {
+              console.error('LINE Auth login error (via storage):', err);
+              toast.error('LINE 登入失敗：' + (err.message || err));
+            } finally {
+              setLoading(false);
+              // 清理 key
+              localStorage.removeItem('miye_line_oauth_success');
+            }
+          }
+        } catch (e) {
+          console.error('解析 LINE Storage 事件失敗:', e);
+        }
       }
     };
 
