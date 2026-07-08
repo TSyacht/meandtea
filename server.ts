@@ -91,73 +91,82 @@ app.use(express.json());
 
   // Custom LINE Login Callback Endpoint
   app.get('/api/auth/line/callback', async (req, res) => {
-    const { code, state, error, error_description } = req.query;
-
-    if (error) {
-      console.error('LINE Login Callback Error:', error, error_description);
-      return res.send(`
-        <!DOCTYPE html>
-        <html>
-          <head>
-            <title>LINE 登入失敗</title>
-            <meta charset="utf-8" />
-            <style>
-              body {
-                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: center;
-                height: 100vh;
-                margin: 0;
-                background-color: #F5F2ED;
-                color: #2C1810;
-                text-align: center;
-              }
-              .error-box {
-                background: white;
-                padding: 30px;
-                border-radius: 20px;
-                box-shadow: 0 10px 25px rgba(0,0,0,0.05);
-                max-width: 400px;
-              }
-              .btn {
-                background: #2C1810;
-                color: #F5F2ED;
-                padding: 10px 20px;
-                border-radius: 10px;
-                text-decoration: none;
-                display: inline-block;
-                margin-top: 15px;
-              }
-            </style>
-          </head>
-          <body>
-            <div class="error-box">
-              <h2 style="color: #ef4444;">LINE 登入失敗</h2>
-              <p>${error_description || error || '未知授權錯誤'}</p>
-              <a href="javascript:window.close();" class="btn">關閉視窗</a>
-            </div>
-            <script>
-              if (window.opener) {
-                window.opener.postMessage({ 
-                  type: 'OAUTH_AUTH_FAILURE', 
-                  error: '${error_description || error || '未知授權錯誤'}' 
-                }, '*');
-                setTimeout(() => window.close(), 3000);
-              }
-            </script>
-          </body>
-        </html>
-      `);
-    }
-
     try {
+      const { code, state, error, error_description } = req.query;
+
+      if (error) {
+        console.error('LINE Login Callback Error:', error, error_description);
+        return res.send(`
+          <!DOCTYPE html>
+          <html>
+            <head>
+              <title>LINE 登入失敗</title>
+              <meta charset="utf-8" />
+              <style>
+                body {
+                  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+                  display: flex;
+                  flex-direction: column;
+                  align-items: center;
+                  justify-content: center;
+                  height: 100vh;
+                  margin: 0;
+                  background-color: #F5F2ED;
+                  color: #2C1810;
+                  text-align: center;
+                }
+                .error-box {
+                  background: white;
+                  padding: 30px;
+                  border-radius: 20px;
+                  box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+                  max-width: 400px;
+                }
+                .btn {
+                  background: #2C1810;
+                  color: #F5F2ED;
+                  padding: 10px 20px;
+                  border-radius: 10px;
+                  text-decoration: none;
+                  display: inline-block;
+                  margin-top: 15px;
+                }
+              </style>
+            </head>
+            <body>
+              <div class="error-box">
+                <h2 style="color: #ef4444;">LINE 登入失敗</h2>
+                <p>${error_description || error || '未知授權錯誤'}</p>
+                <a href="javascript:window.close();" class="btn">關閉視窗</a>
+              </div>
+              <script>
+                if (window.opener) {
+                  try {
+                    window.opener.postMessage({ 
+                      type: 'OAUTH_AUTH_FAILURE', 
+                      error: ${JSON.stringify(error_description || error || '未知授權錯誤')} 
+                    }, '*');
+                  } catch (e) {
+                    console.error(e);
+                  }
+                  setTimeout(() => window.close(), 3000);
+                }
+              </script>
+            </body>
+          </html>
+        `);
+      }
+
+      if (!code) {
+        throw new Error('未提供授權碼 (code)');
+      }
+
       const host = req.get('host') || '';
       const protocol = host.includes('localhost') || host.includes('127.0.0.1') ? 'http' : 'https';
-      const redirectUri = process.env.APP_URL 
-        ? `${process.env.APP_URL.replace(/\/$/, '')}/api/auth/line/callback`
-        : `${protocol}://${host}/api/auth/line/callback`;
+      // 優先使用當前 request 請求的 host 網域，以確保與 LINE 後台設定完美匹配
+      const redirectUri = host 
+        ? `${protocol}://${host}/api/auth/line/callback`
+        : (process.env.APP_URL ? `${process.env.APP_URL.replace(/\/$/, '')}/api/auth/line/callback` : '');
 
       console.log('Exchanging LINE code for tokens. Redirect URI:', redirectUri);
 
@@ -178,18 +187,22 @@ app.use(express.json());
 
       if (!tokenResponse.ok) {
         const errText = await tokenResponse.text();
-        throw new Error(`LINE Token Exchange Failed: ${errText}`);
+        throw new Error(`LINE Token 換取失敗: ${errText}`);
       }
 
       const tokenData = await tokenResponse.json();
       const idToken = tokenData.id_token;
 
       if (!idToken) {
-        throw new Error('LINE did not return an id_token JWT');
+        throw new Error('LINE 未返回 id_token JWT');
       }
 
       // Decode base64 payload from JWT id_token (Header.Payload.Signature)
-      const payloadBase64 = idToken.split('.')[1];
+      const parts = idToken.split('.');
+      if (parts.length < 2) {
+        throw new Error('無效的 id_token JWT 格式');
+      }
+      const payloadBase64 = parts[1];
       const payloadDecoded = Buffer.from(payloadBase64, 'base64').toString('utf8');
       const userProfile = JSON.parse(payloadDecoded);
 
@@ -198,9 +211,18 @@ app.use(express.json());
       const picture = userProfile.picture || '';
       const lineId = userProfile.sub;
 
+      if (!lineId) {
+        throw new Error('無法從 LINE 的 id_token 中取得用戶的 sub (ID)');
+      }
+
       console.log('Successfully decoded LINE user profile for sub:', lineId);
 
-      res.send(`
+      const safeEmail = (email || '').replace(/`/g, '\\`').replace(/\$/g, '\\$');
+      const safeName = (name || '').replace(/`/g, '\\`').replace(/\$/g, '\\$');
+      const safePicture = (picture || '').replace(/`/g, '\\`').replace(/\$/g, '\\$');
+      const safeLineId = (lineId || '').replace(/`/g, '\\`').replace(/\$/g, '\\$');
+
+      return res.send(`
         <!DOCTYPE html>
         <html>
           <head>
@@ -242,10 +264,10 @@ app.use(express.json());
                 try {
                   window.opener.postMessage({ 
                     type: 'LINE_AUTH_SUCCESS',
-                    email: '${email}',
-                    name: '${name}',
-                    picture: '${picture}',
-                    lineId: '${lineId}'
+                    email: ${JSON.stringify(email)},
+                    name: ${JSON.stringify(name)},
+                    picture: ${JSON.stringify(picture)},
+                    lineId: ${JSON.stringify(lineId)}
                   }, '*');
                 } catch (e) {
                   console.error('postMessage error:', e);
@@ -256,10 +278,10 @@ app.use(express.json());
               try {
                 localStorage.setItem('miye_line_oauth_success', JSON.stringify({
                   timestamp: Date.now(),
-                  email: '${email}',
-                  name: '${name}',
-                  picture: '${picture}',
-                  lineId: '${lineId}'
+                  email: ${JSON.stringify(email)},
+                  name: ${JSON.stringify(name)},
+                  picture: ${JSON.stringify(picture)},
+                  lineId: ${JSON.stringify(lineId)}
                 }));
               } catch (e) {
                 console.error('localStorage error:', e);
@@ -278,7 +300,13 @@ app.use(express.json());
       `);
     } catch (err: any) {
       console.error('Error during LINE token exchange or decoding:', err);
-      res.send(`
+      const errMsg = err?.message || '未知錯誤';
+      const errStack = err?.stack || '無堆疊資訊';
+      
+      const safeErrMsg = errMsg.replace(/`/g, '\\`').replace(/\$/g, '\\$');
+      const safeErrStack = errStack.replace(/`/g, '\\`').replace(/\$/g, '\\$');
+
+      return res.status(500).send(`
         <!DOCTYPE html>
         <html>
           <head>
@@ -302,7 +330,9 @@ app.use(express.json());
                 padding: 30px;
                 border-radius: 20px;
                 box-shadow: 0 10px 25px rgba(0,0,0,0.05);
-                max-width: 400px;
+                max-width: 500px;
+                text-align: left;
+                margin: 20px;
               }
               .btn {
                 background: #2C1810;
@@ -313,21 +343,40 @@ app.use(express.json());
                 display: inline-block;
                 margin-top: 15px;
               }
+              pre {
+                background: #f1f1f1;
+                padding: 15px;
+                border-radius: 5px;
+                overflow-x: auto;
+                font-family: monospace;
+                font-size: 11px;
+                white-space: pre-wrap;
+                word-break: break-all;
+              }
             </style>
           </head>
           <body>
             <div class="error-box">
-              <h2 style="color: #ef4444;">LINE 登入錯誤</h2>
-              <p>${err.message || '無法完成 Token 交換'}</p>
-              <a href="javascript:window.close();" class="btn">關閉視窗</a>
+              <h2 style="color: #ef4444; text-align: center; margin-top: 0;">LINE 登入發生錯誤</h2>
+              <p><strong>錯誤原因:</strong></p>
+              <pre>${safeErrMsg}</pre>
+              <p><strong>詳細堆疊:</strong></p>
+              <pre>${safeErrStack}</pre>
+              <div style="text-align: center; margin-top: 20px;">
+                <a href="javascript:window.close();" class="btn">關閉視窗</a>
+              </div>
             </div>
             <script>
               if (window.opener) {
-                window.opener.postMessage({ 
-                  type: 'OAUTH_AUTH_FAILURE', 
-                  error: '${err.message || '無法完成 Token 交換'}' 
-                }, '*');
-                setTimeout(() => window.close(), 3000);
+                try {
+                  window.opener.postMessage({ 
+                    type: 'OAUTH_AUTH_FAILURE', 
+                    error: ${JSON.stringify(errMsg)}
+                  }, '*');
+                } catch (e) {
+                  console.error(e);
+                }
+                setTimeout(() => window.close(), 5000);
               }
             </script>
           </body>
