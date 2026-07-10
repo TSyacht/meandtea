@@ -71,9 +71,14 @@ export const getStorageUrl = (path: string, fallback: string = '/placeholder-tea
   const rootUrl = supabaseUrl || 'https://ftqyzxrvghfdspgjampd.supabase.co';
   const baseUrl = `${rootUrl.replace(/\/$/, '')}/storage/v1/object/public/products/`;
   
-  // 確保路徑中所有的 % 和特殊字元被正確處理，但不重複編碼
-  const encodedPath = encodeURIComponent(decodeURIComponent(path)).replace(/%2F/g, '/');
+  // 若傳入的 path 已經包含了 specimens/ 字串，則直接使用目前的邏輯拼裝，不要再額外增加任何前綴
+  if (path.includes('specimens/')) {
+    const encodedPath = encodeURIComponent(decodeURIComponent(path)).replace(/%2F/g, '/');
+    return `${baseUrl}${encodedPath}`;
+  }
   
+  // 若傳入的 path 不包含 specimens/ 字串，則維持現狀（原本的拼裝邏輯）
+  const encodedPath = encodeURIComponent(decodeURIComponent(path)).replace(/%2F/g, '/');
   return `${baseUrl}${encodedPath}`;
 };
 

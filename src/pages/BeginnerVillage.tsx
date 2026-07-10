@@ -822,7 +822,7 @@ export const BeginnerVillage: React.FC = () => {
                 <div className="space-y-6 md:space-y-8 animate-fadeIn">
                   {/* 上半部：質感大片故事宣傳圖 */}
                   <div 
-                    className="rounded-2xl overflow-hidden aspect-[16/10] md:aspect-[2/1] bg-[#F9F8F4] bg-stone-50 relative group animate-fadeIn"
+                    className="rounded-2xl overflow-hidden bg-[#F9F8F4] bg-stone-50 relative group animate-fadeIn"
                     style={{
                       border: 'none',
                       outline: 'none',
@@ -835,7 +835,7 @@ export const BeginnerVillage: React.FC = () => {
                     <img
                       src={currentStage?.introImage || 'https://images.unsplash.com/photo-1596436889106-be35e843f974?auto=format&fit=crop&w=1200&q=85'}
                       alt={currentStage?.name || '關卡故事前導圖'}
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-102"
+                      className="w-full h-auto block transition-transform duration-700 group-hover:scale-102"
                       style={{
                         border: 'none',
                         outline: 'none',

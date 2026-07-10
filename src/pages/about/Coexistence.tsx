@@ -2,15 +2,34 @@ import React, { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { getSettings, SiteSettings, BotanicalSpecimen } from '../../services/settingsService';
 import { getStorageUrl } from '../../services/productService';
-import { Leaf, Award, Compass, Heart, Activity, Eye, X, Volume2, VolumeX } from 'lucide-react';
+import { Leaf, Award, Compass, Heart, Activity, Eye, X, Volume2, VolumeX, ChevronLeft, ChevronRight } from 'lucide-react';
 
 export const Coexistence: React.FC = () => {
   const [settings, setSettings] = useState<SiteSettings | null>(null);
   const [selectedSpecimen, setSelectedSpecimen] = useState<BotanicalSpecimen | null>(null);
+  const [activeImageIdx, setActiveImageIdx] = useState(0);
   const [isMuted, setIsMuted] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const isManualMutedRef = useRef(false);
+
+  useEffect(() => {
+    setActiveImageIdx(0);
+  }, [selectedSpecimen]);
+
+  // Autoplay slider logic for VIP Specimen Gallery
+  useEffect(() => {
+    if (!selectedSpecimen || !selectedSpecimen.gallery || selectedSpecimen.gallery.length <= 1) return;
+
+    const speedSeconds = settings?.coexistence_vip_autoplay_speed || 4;
+    const intervalMs = speedSeconds * 1000;
+
+    const timer = setInterval(() => {
+      setActiveImageIdx((prev) => (prev === selectedSpecimen.gallery!.length - 1 ? 0 : prev + 1));
+    }, intervalMs);
+
+    return () => clearInterval(timer);
+  }, [selectedSpecimen, settings?.coexistence_vip_autoplay_speed, activeImageIdx]);
 
   useEffect(() => {
     const fetchSettings = async () => {
@@ -196,6 +215,58 @@ export const Coexistence: React.FC = () => {
             </p>
           </div>
 
+          {/* VIP Card Container */}
+          <div 
+            id="vip-card-container"
+            className="vip-card w-full max-w-4xl mx-auto bg-white rounded-[2rem] overflow-hidden border border-stone-100 shadow-sm cursor-pointer group hover:shadow-md transition-all duration-300 mb-12"
+            onClick={() => {
+              setSelectedSpecimen({
+                id: 'vip-usnea',
+                name: settings.coexistence_vip_title || '松蘿',
+                scientificName: settings.coexistence_vip_scientific || 'Usnea',
+                category: 'flora',
+                desc: settings.coexistence_vip_desc || '松蘿（Usnea）是一種極其敏感的附生地衣，常懸掛於高海拔純淨茶園的樹枝上。牠沒有根部，全靠吸收空氣中的水分與霧氣生存，因此也被譽為「大氣的溫度計與空氣清淨機」。只有在完全無污染、空氣極度純淨的環境中才能存活，是覓野茶園生態環境最引以為傲的純淨象徵。',
+                role: settings.coexistence_vip_role || '大氣監測指標，無污染環境守護者',
+                image: settings.coexistence_vip_image || 'https://images.unsplash.com/photo-1502082553048-f009c37129b9?auto=format&fit=crop&w=800&q=80',
+                gallery: settings.coexistence_vip_gallery && settings.coexistence_vip_gallery.length > 0 
+                  ? settings.coexistence_vip_gallery 
+                  : [settings.coexistence_vip_image || 'https://images.unsplash.com/photo-1502082553048-f009c37129b9?auto=format&fit=crop&w=800&q=80']
+              });
+            }}
+          >
+            <div className="flex flex-col md:flex-row items-center">
+              <div className="w-full md:w-1/2 aspect-[16/10] md:aspect-[4/3] overflow-hidden bg-stone-100 relative">
+                <img 
+                  src={getStorageUrl(settings.coexistence_vip_image || 'https://images.unsplash.com/photo-1502082553048-f009c37129b9?auto=format&fit=crop&w=800&q=80')}
+                  alt={settings.coexistence_vip_title || '松蘿'}
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 select-none pointer-events-none"
+                  referrerPolicy="no-referrer"
+                />
+                <div className="absolute inset-0 bg-stone-900/5 group-hover:bg-stone-900/10 transition-colors flex items-center justify-center">
+                  <div className="w-10 h-10 bg-white/90 backdrop-blur-md rounded-full flex items-center justify-center text-stone-600 scale-75 opacity-0 group-hover:scale-100 group-hover:opacity-100 transition-all duration-300 shadow">
+                    <Eye size={16} />
+                  </div>
+                </div>
+              </div>
+              <div className="w-full md:w-1/2 p-8 md:p-10 flex flex-col justify-center space-y-4">
+                <div className="inline-flex items-center gap-2">
+                  <span className="text-[10px] font-bold tracking-widest bg-[#707040]/10 text-[#707040] px-3 py-1 rounded-full uppercase">
+                    VIP 生態指標 / Premium Bio-Indicator
+                  </span>
+                </div>
+                <h3 className="text-xl md:text-2xl font-serif font-bold text-stone-800 group-hover:text-[#707040] transition-colors">
+                  {settings.coexistence_vip_title || '松蘿'}
+                </h3>
+                <p className="text-stone-600 font-light text-sm leading-relaxed">
+                  {settings.coexistence_vip_intro || '松蘿：大氣中的空靈舞者，淨化與純淨的象徵'}
+                </p>
+                <div className="pt-2 text-xs font-bold text-[#707040] flex items-center gap-1.5 group-hover:translate-x-1 transition-transform duration-300">
+                  探索更多細節 <span className="text-sm">➔</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
           {specimens.length === 0 ? (
             <div className="text-center py-20 text-stone-400 font-light border-2 border-dashed border-stone-200 rounded-[2rem]">
               還沒有新增任何花草或動物圖鑑卡片。可以前往後台「店長貓與品牌專區」新增卡片！
@@ -255,21 +326,74 @@ export const Coexistence: React.FC = () => {
                 transition={{ type: 'spring', damping: 25 }}
                 className="fixed inset-x-6 bottom-6 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 max-w-xl w-full bg-[#FBFBFA] rounded-[3rem] overflow-hidden shadow-2xl z-[110] border border-stone-200"
               >
-                <div className="relative aspect-video w-full overflow-hidden bg-stone-100">
-                  <img 
-                    src={getStorageUrl(selectedSpecimen.image)}
-                    alt={selectedSpecimen.name}
-                    className="w-full h-full object-cover"
-                    referrerPolicy="no-referrer"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                <div className="relative aspect-video w-full overflow-hidden bg-stone-100 group/slider">
+                  {selectedSpecimen.gallery && selectedSpecimen.gallery.length > 1 ? (
+                    <>
+                      {/* Slider Images */}
+                      <div className="w-full h-full relative">
+                        <img 
+                          src={getStorageUrl(selectedSpecimen.gallery[activeImageIdx])}
+                          alt={`${selectedSpecimen.name} - ${activeImageIdx + 1}`}
+                          className="w-full h-full object-cover transition-all duration-300"
+                          referrerPolicy="no-referrer"
+                        />
+                      </div>
+
+                      {/* Left Arrow */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setActiveImageIdx((prev) => (prev === 0 ? selectedSpecimen.gallery!.length - 1 : prev - 1));
+                        }}
+                        className="absolute left-4 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/40 hover:bg-black/60 text-white flex items-center justify-center transition-all opacity-0 group-hover/slider:opacity-100 z-10"
+                      >
+                        <ChevronLeft size={16} />
+                      </button>
+
+                      {/* Right Arrow */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setActiveImageIdx((prev) => (prev === selectedSpecimen.gallery!.length - 1 ? 0 : prev + 1));
+                        }}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/40 hover:bg-black/60 text-white flex items-center justify-center transition-all opacity-0 group-hover/slider:opacity-100 z-10"
+                      >
+                        <ChevronRight size={16} />
+                      </button>
+
+                      {/* Dots indicators */}
+                      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-1.5 z-10 bg-black/25 px-2.5 py-1 rounded-full backdrop-blur-sm">
+                        {selectedSpecimen.gallery.map((_, i) => (
+                          <button
+                            key={i}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setActiveImageIdx(i);
+                            }}
+                            className={`w-1.5 h-1.5 rounded-full transition-all ${
+                              i === activeImageIdx ? 'bg-white scale-125' : 'bg-white/50 hover:bg-white/80'
+                            }`}
+                          />
+                        ))}
+                      </div>
+                    </>
+                  ) : (
+                    <img 
+                      src={getStorageUrl(selectedSpecimen.image)}
+                      alt={selectedSpecimen.name}
+                      className="w-full h-full object-cover"
+                      referrerPolicy="no-referrer"
+                    />
+                  )}
+
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none z-[1]" />
                   <button
                     onClick={() => setSelectedSpecimen(null)}
-                    className="absolute top-6 right-6 w-10 h-10 bg-white/90 backdrop-blur-md text-stone-700 rounded-full flex items-center justify-center hover:bg-white active:scale-95 shadow transition-all duration-300"
+                    className="absolute top-6 right-6 w-10 h-10 bg-white/90 backdrop-blur-md text-stone-700 rounded-full flex items-center justify-center hover:bg-white active:scale-95 shadow transition-all duration-300 z-20"
                   >
                     <X size={18} />
                   </button>
-                  <div className="absolute bottom-6 left-8 text-white text-left">
+                  <div className="absolute bottom-6 left-8 text-white text-left pointer-events-none z-10">
                     <span className="text-[10px] font-bold tracking-widest bg-[#707040] text-white px-2.5 py-0.5 rounded-full uppercase mb-2 inline-block">
                       {(selectedSpecimen.category === 'flora' || selectedSpecimen.category as string === '濕地' || selectedSpecimen.category as string === '茶園護航百草') ? '茶園護航百草' : '茶地守護動物'}
                     </span>

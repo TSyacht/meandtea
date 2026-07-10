@@ -11,6 +11,8 @@ import {
   GripVertical, 
   ArrowUp, 
   ArrowDown, 
+  ArrowLeft,
+  ArrowRight,
   Plus, 
   Leaf, 
   Compass, 
@@ -224,6 +226,56 @@ export const AdminSettings: React.FC = () => {
     newSpecimens[targetIdx] = temp;
 
     setSettings({ ...settings, specimens: newSpecimens });
+  };
+
+  // VIP Card Gallery Helpers
+  const addVipGalleryImage = () => {
+    if (!settings) return;
+    const currentGallery = settings.coexistence_vip_gallery || [];
+    setSettings({
+      ...settings,
+      coexistence_vip_gallery: [...currentGallery, '']
+    });
+    toast.success('已新增一張空白照片欄位，請上傳照片');
+  };
+
+  const removeVipGalleryImage = (index: number) => {
+    if (!settings) return;
+    const currentGallery = settings.coexistence_vip_gallery || [];
+    const newGallery = currentGallery.filter((_, idx) => idx !== index);
+    setSettings({
+      ...settings,
+      coexistence_vip_gallery: newGallery
+    });
+    toast.success('已移除輪播照片');
+  };
+
+  const updateVipGalleryImage = (index: number, url: string) => {
+    if (!settings) return;
+    const currentGallery = [...(settings.coexistence_vip_gallery || [])];
+    while (currentGallery.length <= index) {
+      currentGallery.push('');
+    }
+    currentGallery[index] = url;
+    setSettings({
+      ...settings,
+      coexistence_vip_gallery: currentGallery
+    });
+  };
+
+  const moveVipGalleryImage = (index: number, direction: 'left' | 'right') => {
+    if (!settings) return;
+    const currentGallery = [...(settings.coexistence_vip_gallery || [])];
+    const targetIdx = direction === 'left' ? index - 1 : index + 1;
+    if (targetIdx < 0 || targetIdx >= currentGallery.length) return;
+    
+    const temp = currentGallery[index];
+    currentGallery[index] = currentGallery[targetIdx];
+    currentGallery[targetIdx] = temp;
+    setSettings({
+      ...settings,
+      coexistence_vip_gallery: currentGallery
+    });
   };
 
   // Feline resume list helpers
@@ -1130,6 +1182,184 @@ export const AdminSettings: React.FC = () => {
                     </div>
                   </div>
                 ))}
+              </div>
+            </div>
+
+            <hr className="border-stone-100" />
+
+            {/* VIP Card Area: 松蘿 */}
+            <div className="space-y-6 bg-stone-50/50 p-6 rounded-[2rem] border border-stone-200/60 shadow-sm">
+              <div>
+                <div className="inline-flex items-center gap-2 mb-1">
+                  <span className="text-[10px] font-bold tracking-widest bg-amber-500 text-white px-2 py-0.5 rounded-full uppercase">
+                    VIP 生態指標卡片
+                  </span>
+                </div>
+                <h4 className="text-sm font-bold text-stone-800">生態大觀園 VIP 卡片設定 (松蘿)</h4>
+                <p className="text-xs text-stone-400">這是顯示在「生態大觀園（生態池）」說明文字正下方、一般卡片上方的精選 VIP 卡片，可用於展示代表性關鍵物種（如：松蘿）。</p>
+              </div>
+
+              <div className="flex flex-col lg:flex-row gap-6 items-start">
+                <div className="w-full sm:w-[180px] shrink-0">
+                  <ImageUploader 
+                    label="VIP 代表圖片"
+                    value={settings.coexistence_vip_image || ''}
+                    onChange={(url) => setSettings({ ...settings, coexistence_vip_image: url })}
+                  />
+                </div>
+
+                <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-4 w-full">
+                  <div className="space-y-1">
+                    <label className="text-[10px] uppercase font-bold text-stone-400">卡片標題</label>
+                    <input 
+                      type="text" 
+                      value={settings.coexistence_vip_title || ''}
+                      onChange={(e) => setSettings({ ...settings, coexistence_vip_title: e.target.value })}
+                      placeholder="例如：松蘿"
+                      className="w-full px-3 py-2 bg-white border border-stone-200/60 rounded-xl text-xs font-semibold focus:ring-1 focus:ring-[#707040] focus:border-[#707040]"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[10px] uppercase font-bold text-stone-400">科學學名 (Scientific Name)</label>
+                    <input 
+                      type="text" 
+                      value={settings.coexistence_vip_scientific || ''}
+                      onChange={(e) => setSettings({ ...settings, coexistence_vip_scientific: e.target.value })}
+                      placeholder="例如：Usnea"
+                      className="w-full px-3 py-2 bg-white border border-stone-200/60 rounded-xl text-xs font-semibold focus:ring-1 focus:ring-[#707040] focus:border-[#707040]"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[10px] uppercase font-bold text-stone-400">輪播自動換頁間隔 (秒)</label>
+                    <input 
+                      type="number" 
+                      min={1}
+                      max={60}
+                      value={settings.coexistence_vip_autoplay_speed || 4}
+                      onChange={(e) => setSettings({ ...settings, coexistence_vip_autoplay_speed: parseInt(e.target.value) || 4 })}
+                      placeholder="預設 4 秒"
+                      className="w-full px-3 py-2 bg-white border border-stone-200/60 rounded-xl text-xs font-semibold focus:ring-1 focus:ring-[#707040] focus:border-[#707040]"
+                    />
+                  </div>
+
+                  <div className="space-y-1 md:col-span-3">
+                    <label className="text-[10px] uppercase font-bold text-stone-400">重點介紹 / 標語 (Tagline)</label>
+                    <input 
+                      type="text" 
+                      value={settings.coexistence_vip_intro || ''}
+                      onChange={(e) => setSettings({ ...settings, coexistence_vip_intro: e.target.value })}
+                      placeholder="例如：松蘿：大氣中的空靈舞者，淨化與純淨的象徵"
+                      className="w-full px-3 py-2 bg-white border border-stone-200/60 rounded-xl text-xs font-semibold focus:ring-1 focus:ring-[#707040] focus:border-[#707040]"
+                    />
+                  </div>
+
+                  <div className="space-y-1 md:col-span-3">
+                    <label className="text-[10px] uppercase font-bold text-stone-400">它的祕密任務 / 自然生態定位 (Role)</label>
+                    <input 
+                      type="text" 
+                      value={settings.coexistence_vip_role || ''}
+                      onChange={(e) => setSettings({ ...settings, coexistence_vip_role: e.target.value })}
+                      placeholder="例如：大氣監測指標，無污染環境守護者"
+                      className="w-full px-3 py-2 bg-white border border-stone-200/60 rounded-xl text-xs font-semibold focus:ring-1 focus:ring-[#707040] focus:border-[#707040]"
+                    />
+                  </div>
+
+                  <div className="space-y-1 md:col-span-3">
+                    <label className="text-[10px] uppercase font-bold text-stone-400">詳細介紹 / 共生故事 (Story & Value)</label>
+                    <textarea 
+                      rows={4}
+                      value={settings.coexistence_vip_desc || ''}
+                      onChange={(e) => setSettings({ ...settings, coexistence_vip_desc: e.target.value })}
+                      placeholder="請寫下松蘿的詳細介紹與生態價值..."
+                      className="w-full px-3 py-2 bg-white border border-stone-200/60 rounded-xl text-stone-500 text-xs resize-none leading-relaxed focus:ring-1 focus:ring-[#707040] focus:border-[#707040]"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="border-t border-stone-200/60 pt-6">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-4">
+                  <div>
+                    <h5 className="text-xs font-bold text-stone-800 flex items-center gap-1.5">
+                      <ImageIcon size={14} className="text-[#707040]" />
+                      松蘿彈跳視窗多圖輪播圖集 (VIP Gallery)
+                    </h5>
+                    <p className="text-[11px] text-stone-400">當使用者在點擊松蘿卡片打開彈跳視窗時，可左右滑動看到的輪播多圖（第一張範本空間預設會提供，若欲展示多張照片，請點擊右方按鈕新增）。</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={addVipGalleryImage}
+                    className="flex items-center gap-1 bg-[#707040]/10 text-[#707040] px-3.5 py-1.5 rounded-full text-[11px] font-bold hover:bg-[#707040]/20 transition-all active:scale-95 shadow-sm shrink-0"
+                  >
+                    <Plus size={12} /> 新增照片
+                  </button>
+                </div>
+
+                {/* Grid of gallery uploaders */}
+                {(!settings.coexistence_vip_gallery || settings.coexistence_vip_gallery.length === 0) ? (
+                  /* Initial template space */
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                    <div className="p-3 bg-white rounded-2xl border border-stone-200/60 shadow-sm space-y-2 flex flex-col justify-between">
+                      <ImageUploader 
+                        label="預設照片範本"
+                        value={''}
+                        onChange={(url) => updateVipGalleryImage(0, url)}
+                      />
+                      <div className="text-[10px] text-stone-400 text-center italic">範本空間 (尚未上傳)</div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                    {settings.coexistence_vip_gallery.map((imgUrl, imgIdx) => (
+                      <div 
+                        key={imgIdx} 
+                        className="p-3 bg-white rounded-2xl border border-stone-200/60 shadow-sm space-y-3 flex flex-col justify-between"
+                      >
+                        <ImageUploader 
+                          label={`輪播照片 #${imgIdx + 1}`}
+                          value={imgUrl}
+                          onChange={(url) => updateVipGalleryImage(imgIdx, url)}
+                        />
+                        
+                        <div className="flex items-center justify-between gap-1 pt-1 border-t border-stone-100">
+                          {/* Order actions */}
+                          <div className="flex gap-1">
+                            <button
+                              type="button"
+                              onClick={() => moveVipGalleryImage(imgIdx, 'left')}
+                              disabled={imgIdx === 0}
+                              className="p-1 rounded bg-stone-50 hover:bg-stone-100 text-stone-600 disabled:opacity-40"
+                              title="向左移"
+                            >
+                              <ArrowLeft size={12} />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => moveVipGalleryImage(imgIdx, 'right')}
+                              disabled={imgIdx === settings.coexistence_vip_gallery!.length - 1}
+                              className="p-1 rounded bg-stone-50 hover:bg-stone-100 text-stone-600 disabled:opacity-40"
+                              title="向右移"
+                            >
+                              <ArrowRight size={12} />
+                            </button>
+                          </div>
+
+                          {/* Delete action */}
+                          <button
+                            type="button"
+                            onClick={() => removeVipGalleryImage(imgIdx)}
+                            className="p-1 rounded bg-red-50 hover:bg-red-100 text-red-600 transition-colors"
+                            title="刪除"
+                          >
+                            <Trash2 size={12} />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
 

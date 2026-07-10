@@ -26,6 +26,7 @@ export interface BotanicalSpecimen {
   desc: string;
   role: string;
   image: string;
+  gallery?: string[];
 }
 
 export interface CatDutyItem {
@@ -85,6 +86,14 @@ export interface SiteSettings {
   coexistence_bg_audio: string;
   coexistence_audio_autoplay: boolean;
   coexistence_audio_loop: boolean;
+  coexistence_vip_image?: string;
+  coexistence_vip_gallery?: string[];
+  coexistence_vip_autoplay_speed?: number;
+  coexistence_vip_title?: string;
+  coexistence_vip_intro?: string;
+  coexistence_vip_desc?: string;
+  coexistence_vip_scientific?: string;
+  coexistence_vip_role?: string;
 
   // Cats Daily Page content
   cat_manager_badge: string;
@@ -260,6 +269,18 @@ const DEFAULT_SETTINGS: SiteSettings = {
   coexistence_bg_audio: '',
   coexistence_audio_autoplay: true,
   coexistence_audio_loop: true,
+  coexistence_vip_image: 'https://images.unsplash.com/photo-1502082553048-f009c37129b9?auto=format&fit=crop&w=800&q=80',
+  coexistence_vip_gallery: [
+    'https://images.unsplash.com/photo-1502082553048-f009c37129b9?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=800&q=80'
+  ],
+  coexistence_vip_autoplay_speed: 4,
+  coexistence_vip_title: '松蘿',
+  coexistence_vip_intro: '松蘿：大氣中的空靈舞者，淨化與純淨的象徵',
+  coexistence_vip_desc: '松蘿（Usnea）是一種極其敏感的附生地衣，常懸掛於高海拔純淨茶園的樹枝上。牠沒有根部，全靠吸收空氣中的水分與霧氣生存，因此也被譽為「大氣的溫度計與空氣清淨機」。只有在完全無污染、空氣極度純淨的環境中才能存活，是覓野茶園生態環境最引以為傲的純淨象徵。',
+  coexistence_vip_scientific: 'Usnea',
+  coexistence_vip_role: '大氣監測指標，無污染環境守護者',
 
   // Cats Daily defaults
   cat_manager_badge: 'General Manager Cat',
