@@ -10,8 +10,33 @@ dotenv.config();
 const __filename = typeof import.meta !== 'undefined' && import.meta?.url ? fileURLToPath(import.meta.url) : '';
 const __dirname = __filename ? path.dirname(__filename) : process.cwd();
 
-const supabaseUrl = process.env.VITE_SUPABASE_URL || 'https://ftqyzxrvghfdspgjampd.supabase.co';
-const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || 'sb_publishable_PRsJAks9Nw0fcT7Bvd0Y2Q_abzmKtne';
+const validateUrl = (url: any): string => {
+  if (!url) return '';
+  const str = String(url).trim();
+  if (str === 'undefined' || str === 'null' || str === '[object Object]' || str === '' || str.includes('your-project-id')) return '';
+  if (str.startsWith('http://') || str.startsWith('https://')) {
+    return str;
+  }
+  return '';
+};
+
+const validateKey = (key: any): string => {
+  if (!key) return '';
+  const str = String(key).trim();
+  if (str === 'undefined' || str === 'null' || str === '[object Object]' || str === '' || str.includes('your-anon-key') || str.length < 10) return '';
+  return str;
+};
+
+const cleanUrl = validateUrl(process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL);
+const cleanKey = validateKey(process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY);
+
+const supabaseUrl = cleanUrl || 'https://ftqyzxrvghfdspgjampd.supabase.co';
+const supabaseAnonKey = cleanKey || 'sb_publishable_PRsJAks9Nw0fcT7Bvd0Y2Q_abzmKtne';
+
+if (!cleanUrl) {
+  console.warn('【覓野茶 Server】Supabase URL 尚未在環境變數中正確設定，目前自動使用預設專案。');
+}
+
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 export const app = express();
