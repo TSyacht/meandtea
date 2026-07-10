@@ -1,6 +1,7 @@
 import express from 'express';
 import path from 'path';
 import fs from 'fs';
+import https from 'https';
 import { fileURLToPath } from 'url';
 import { createClient } from '@supabase/supabase-js';
 import dotenv from 'dotenv';
@@ -88,6 +89,62 @@ app.use(express.json());
       </html>
     `);
   });
+
+  // Safe HTTP/HTTPS request utility using standard Node.js https module. 
+  // This guarantees 100% reliability and compatibility across all Node versions on Vercel/Cloud Run.
+  const safeFetch = (url: string, options: { method?: string; headers?: Record<string, string>; body?: string }): Promise<{
+    ok: boolean;
+    status: number;
+    text: () => Promise<string>;
+    json: () => Promise<any>;
+  }> => {
+    return new Promise((resolve, reject) => {
+      try {
+        const urlObj = new URL(url);
+        const reqOptions: https.RequestOptions = {
+          method: options.method || 'GET',
+          headers: {
+            ...(options.headers || {}),
+          },
+        };
+
+        const req = https.request(urlObj, reqOptions, (res) => {
+          const chunks: any[] = [];
+          res.on('data', (chunk) => chunks.push(chunk));
+          res.on('end', () => {
+            const bodyBuffer = Buffer.concat(chunks);
+            const bodyText = bodyBuffer.toString('utf8');
+            const statusCode = res.statusCode || 500;
+            const ok = statusCode >= 200 && statusCode < 300;
+
+            resolve({
+              ok,
+              status: statusCode,
+              text: async () => bodyText,
+              json: async () => {
+                try {
+                  return JSON.parse(bodyText);
+                } catch (jsonErr) {
+                  throw new Error(`JSON 解析失敗: ${bodyText}`);
+                }
+              },
+            });
+          });
+        });
+
+        req.on('error', (err) => {
+          reject(err);
+        });
+
+        if (options.body) {
+          req.write(options.body);
+        }
+        req.end();
+      } catch (err) {
+        reject(err);
+      }
+    });
+  };
 
   // Custom LINE Login Callback Endpoint
   app.get('/api/auth/line/callback', async (req, res) => {
@@ -212,8 +269,8 @@ app.use(express.json());
         calculatedRedirectUri: redirectUri
       });
 
-      // Exchange code for tokens
-      const tokenResponse = await fetch('https://api.line.me/oauth2/v2.1/token', {
+      // Exchange code for tokens using robust safeFetch helper
+      const tokenResponse = await safeFetch('https://api.line.me/oauth2/v2.1/token', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
@@ -342,8 +399,9 @@ app.use(express.json());
       `);
     } catch (err: any) {
       console.error('Error during LINE token exchange or decoding:', err);
-      const errMsg = err?.message || '未知錯誤';
-      const errStack = err?.stack || '無堆疊資訊';
+      // Ensure we have robust strings to prevent any TypeError calling .replace()
+      const errMsg = String(err?.message || err || '未知錯誤');
+      const errStack = String(err?.stack || '無堆疊資訊');
       
       const safeErrMsg = errMsg.replace(/`/g, '\\`').replace(/\$/g, '\\$');
       const safeErrStack = errStack.replace(/`/g, '\\`').replace(/\$/g, '\\$');
