@@ -115,7 +115,13 @@ export const Login: React.FC = () => {
     try {
       const clientId = '2010600801';
       const redirectUri = `${window.location.origin}/api/auth/line/callback`;
-      const state = Math.random().toString(36).substring(2, 15);
+      
+      // 將隨機 state 與目前的 window.location.origin 包裝成 JSON 並用 Base64 編碼，以便後台 callback 解析，確保網域 100% 一致
+      const stateObj = {
+        random: Math.random().toString(36).substring(2, 15),
+        origin: window.location.origin
+      };
+      const state = btoa(JSON.stringify(stateObj));
       
       const lineAuthUrl = `https://access.line.me/oauth2/v2.1/authorize?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&state=${state}&scope=profile%20openid%20email`;
       

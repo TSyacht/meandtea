@@ -161,20 +161,54 @@ app.use(express.json());
         throw new Error('未提供授權碼 (code)');
       }
 
-      const forwardedHost = req.get('x-forwarded-host');
-      const forwardedProto = req.get('x-forwarded-proto') || 'https';
-      const host = forwardedHost || req.get('host') || '';
-      const protocol = host.includes('localhost') || host.includes('127.0.0.1') ? 'http' : forwardedProto;
-      
-      // 優先使用當前 request 請求的 host 網域（包含反向代理 / Vercel 的 forwarded headers），以確保與 LINE 後台設定及前端發送端完美匹配
-      const redirectUri = host 
-        ? `${protocol}://${host}/api/auth/line/callback`
-        : (process.env.APP_URL ? `${process.env.APP_URL.replace(/\/$/, '')}/api/auth/line/callback` : '');
+      // 解析 state 中的原發起網域 (Origin)，確保 callback URL 的 domain/protocol 與前端 100% 一致，繞過一切代理和 CDN 干擾
+      const stateStr = (state as string) || '';
+      let parsedOrigin = '';
+      try {
+        if (stateStr) {
+          const decodedState = Buffer.from(stateStr, 'base64').toString('utf8');
+          const stateObj = JSON.parse(decodedState);
+          if (stateObj && stateObj.origin) {
+            parsedOrigin = stateObj.origin;
+          }
+        }
+      } catch (e) {
+        console.warn('解析 LINE state 網域失敗 (可能是舊版 request):', e);
+      }
+
+      // 100% 穩健的安全取值法，不使用 Express 專屬的 req.get() 避免在 Serverless (如 Vercel) 或原生 Node.js 環境中引發 TypeError 崩潰
+      const getHeaderSafe = (name: string): string => {
+        const val = req.headers ? req.headers[name.toLowerCase()] : undefined;
+        if (Array.isArray(val)) {
+          return val[0] || '';
+        }
+        return (val as string) || '';
+      };
+
+      let redirectUri = '';
+      if (parsedOrigin) {
+        redirectUri = `${parsedOrigin}/api/auth/line/callback`;
+      } else {
+        // 備援方案：從安全的請求標頭中計算
+        const host = getHeaderSafe('x-forwarded-host') || getHeaderSafe('host') || '';
+        let protocol = 'https';
+        if (host.includes('localhost') || host.includes('127.0.0.1')) {
+          protocol = 'http';
+        } else {
+          const xfp = getHeaderSafe('x-forwarded-proto');
+          if (xfp) {
+            protocol = xfp.split(',')[0].trim();
+          }
+        }
+        redirectUri = host 
+          ? `${protocol}://${host}/api/auth/line/callback`
+          : (process.env.APP_URL ? `${process.env.APP_URL.replace(/\/$/, '')}/api/auth/line/callback` : '');
+      }
 
       console.log('Exchanging LINE code for tokens. Debug info:', {
-        requestHost: req.get('host'),
-        forwardedHost,
-        forwardedProto,
+        parsedOrigin,
+        requestHost: getHeaderSafe('host'),
+        forwardedProto: getHeaderSafe('x-forwarded-proto'),
         calculatedRedirectUri: redirectUri
       });
 
