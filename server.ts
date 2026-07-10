@@ -161,14 +161,22 @@ app.use(express.json());
         throw new Error('未提供授權碼 (code)');
       }
 
-      const host = req.get('host') || '';
-      const protocol = host.includes('localhost') || host.includes('127.0.0.1') ? 'http' : 'https';
-      // 優先使用當前 request 請求的 host 網域，以確保與 LINE 後台設定完美匹配
+      const forwardedHost = req.get('x-forwarded-host');
+      const forwardedProto = req.get('x-forwarded-proto') || 'https';
+      const host = forwardedHost || req.get('host') || '';
+      const protocol = host.includes('localhost') || host.includes('127.0.0.1') ? 'http' : forwardedProto;
+      
+      // 優先使用當前 request 請求的 host 網域（包含反向代理 / Vercel 的 forwarded headers），以確保與 LINE 後台設定及前端發送端完美匹配
       const redirectUri = host 
         ? `${protocol}://${host}/api/auth/line/callback`
         : (process.env.APP_URL ? `${process.env.APP_URL.replace(/\/$/, '')}/api/auth/line/callback` : '');
 
-      console.log('Exchanging LINE code for tokens. Redirect URI:', redirectUri);
+      console.log('Exchanging LINE code for tokens. Debug info:', {
+        requestHost: req.get('host'),
+        forwardedHost,
+        forwardedProto,
+        calculatedRedirectUri: redirectUri
+      });
 
       // Exchange code for tokens
       const tokenResponse = await fetch('https://api.line.me/oauth2/v2.1/token', {
