@@ -130,6 +130,7 @@ export const Footer: React.FC = () => {
           <div className="flex gap-6 text-xs text-stone-600">
             <NavLink to="/privacy" className="hover:text-stone-400 transition-colors">服務條款</NavLink>
             <NavLink to="/privacy" className="hover:text-stone-400 transition-colors">隱私權政策</NavLink>
+            <NavLink to="/admin/login" className="hover:text-stone-400 transition-colors border-l border-white/10 pl-6">管理登入</NavLink>
           </div>
         </div>
       </div>

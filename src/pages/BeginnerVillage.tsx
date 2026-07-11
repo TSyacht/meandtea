@@ -268,34 +268,24 @@ export const BeginnerVillage: React.FC = () => {
     }
   };
 
-  const triggerSocialShare = (platform: string, imageUrl: string, invitationText: string, title?: string, description?: string) => {
-    const officialOrigin = 'https://meandtea.vercel.app';
-    const pageUrl = officialOrigin + '/beginner-village';
-    
-    // Construct dynamic parameters to have the server render standard OG tags
-    let queryParts = `img=${encodeURIComponent(imageUrl)}`;
-    if (title) {
-      queryParts += `&title=${encodeURIComponent(title)}`;
-    }
-    const cleanDesc = description || (invitationText ? invitationText.split('\n')[0] : '');
-    if (cleanDesc) {
-      queryParts += `&desc=${encodeURIComponent(cleanDesc)}`;
-    }
-    
-    const shareUrl = `${pageUrl}?${queryParts}`;
-    const message = `${invitationText}\n\n👉 立即前往探索新手村專屬測驗：${shareUrl}`;
+  const triggerSocialShare = (platform: string, invitationText: string) => {
+    const shareUrl = 'https://meandtea.vercel.app/beginner-village';
+    const message = invitationText ? `${invitationText}\n\n👉 立即前往探索新手村專屬測驗：${shareUrl}` : `👉 立即前往探索新手村專屬測驗：${shareUrl}`;
 
     if (platform === 'line') {
-      window.open(`https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(invitationText)}`, '_blank');
+      window.open(`https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(invitationText || '來測測你的尋茶人格與專屬五維檔案吧！')}`, '_blank');
     } else if (platform === 'threads') {
       window.open(`https://threads.net/intent/post?text=${encodeURIComponent(message)}`, '_blank');
     } else if (platform === 'facebook') {
-      window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}&quote=${encodeURIComponent(invitationText)}`, '_blank');
+      window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}&quote=${encodeURIComponent(invitationText || '')}`, '_blank');
     } else if (platform === 'instagram') {
-      copyToClipboard(message);
-      toast.success('💡 Instagram 分享提醒\n已將精彩結果與連結存入剪貼簿！開啟 Instagram 即可黏貼分享！', {
-        duration: 5000,
-        icon: '📸'
+      navigator.clipboard.writeText(message).then(() => {
+        toast.success('💡 Instagram 分享提醒\n已將分享連結與精彩內容複製至剪貼簿！開啟 Instagram 貼上即可分享！', {
+          duration: 5000,
+          icon: '📸'
+        });
+      }).catch(() => {
+        toast.error('複製失敗，請手動複製');
       });
     }
   };
@@ -524,7 +514,7 @@ export const BeginnerVillage: React.FC = () => {
                     <div className="flex items-center justify-center gap-4">
                       {/* LINE */}
                       <button
-                        onClick={() => triggerSocialShare('line', config?.ultimate.image || '', config?.ultimate.socialText || '', config?.ultimate.title || '終極五維尋茶檔案', config?.ultimate.socialText || '')}
+                        onClick={() => triggerSocialShare('line', config?.ultimate.socialText || '')}
                         className="w-11 h-11 rounded-full flex items-center justify-center transition-all scale-100 active:scale-95 shadow-sm overflow-hidden bg-transparent shrink-0"
                         title="立即分享至 LINE"
                       >
@@ -541,7 +531,7 @@ export const BeginnerVillage: React.FC = () => {
 
                       {/* Threads */}
                       <button
-                        onClick={() => triggerSocialShare('threads', config?.ultimate.image || '', config?.ultimate.socialText || '', config?.ultimate.title || '終極五維尋茶檔案', config?.ultimate.socialText || '')}
+                        onClick={() => triggerSocialShare('threads', config?.ultimate.socialText || '')}
                         className="w-11 h-11 rounded-full flex items-center justify-center transition-all scale-100 active:scale-95 shadow-sm overflow-hidden bg-transparent shrink-0"
                         title="立即分享至 Threads"
                       >
@@ -550,7 +540,7 @@ export const BeginnerVillage: React.FC = () => {
                         ) : (
                           <div className="w-full h-full bg-black flex items-center justify-center text-white hover:bg-neutral-900">
                             <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
-                              <path d="M12 0c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm4.18 16.326c-.347.168-.619.26-.821.272a2.3 2.3 0 0 1-1.393-.418 2.32 2.3 0 0 1-.806-1.127l-.025-.09a5.92 5.92 0 0 1-2.915 1.545 4.316 4.316 0 0 1-2.316-.27c-.836-.37-1.468-1.002-1.89-1.89-.4-1.503.2-3.15 1.34-3.793.633-.356 1.332-.475 2.083-.35 1.258.204 2.115.82 2.628 1.838a1.27 1.27 0 0 0-.256-.032c-.89-.015-1.58.117-2.073.398l-.133.082c-.65.4-.533 1.492.35 1.411.373-.035.792-.128 1.077-.282.416-.226.745-.609.914-1.074l.03-.09c.307.391.688.583(1.155.583a1.53 1.53 0 0 0 .977-.354l.061-.059v1.233c-.021.24.032.483.2.71c.101.144.204.225.321.244.282-.008.618-.114 1-.318l1.455-1.353c1.696-1.583.947-3.655-.951-4.269a6.012 6.012 0 0 0-4.045-.04c-1.848.601-3.155 2.128-3.418 3.992-.259 1.833.618 3.738 2.215 4.792a7.02 7.02 0 0 0 4.12 1.268c1.378-.01.21-.122.951-.107c1.252-.423 2.155-1.351 2.766-2.825l-.233-.082c-.394.887-1.121 1.442-2.185 1.666zm-5.011-3.666c-.347.012-.663.094-.949.246-.575.308-.475 1.085.18 1.12.35-.008.625-.133.821-.375a1.86 1.86 0 0 0 .378-1l-.43.009z" />
+                              <path d="M12 0c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm4.18 16.326c-.347.168-.619.26-.821.272a2.3 2.3 0 0 1-1.393-.418 2.32 2.3 0 0 1-.806-1.127l-.025-.09a5.92 5.92 0 0 1-2.915 1.545 4.316 4.316 0 0 1-2.316-.27c-.836-.37-1.468-1.002-1.89-1.89-.4-1.503.2-3.15 1.34-3.793.633-.356 1.332-.475 2.083-.35 1.258.204 2.115.82 2.628 1.838a1.27 1.27 0 0 0-.256-.032c-.89-.015-1.58.117-2.073.398l-.133.082c-.65.4-.533 1.492.35 1.411.373-.035.792-.128 1.077-.282.416-.226.745-.609.914-1.074l.03-.09c.307.391.688.583 1.155.583a1.53 1.53 0 0 0 .977-.354l.061-.059v1.233c-.021.24.032.483.2.71c.101.144.204.225.321.244.282-.008.618-.114 1-.318l1.455-1.353c1.696-1.583.947-3.655-.951-4.269a6.012 6.012 0 0 0-4.045-.04c-1.848.601-3.155 2.128-3.418 3.992-.259 1.833.618 3.738 2.215 4.792a7.02 7.02 0 0 0 4.12 1.268c1.378-.01.21-.122.951-.107c1.252-.423 2.155-1.351 2.766-2.825l-.233-.082c-.394.887-1.121 1.442-2.185 1.666zm-5.011-3.666c-.347.012-.663.094-.949.246-.575.308-.475 1.085.18 1.12.35-.008.625-.133.821-.375a1.86 1.86 0 0 0 .378-1l-.43.009z" />
                             </svg>
                           </div>
                         )}
@@ -558,7 +548,7 @@ export const BeginnerVillage: React.FC = () => {
 
                       {/* Instagram */}
                       <button
-                        onClick={() => triggerSocialShare('instagram', config?.ultimate.image || '', config?.ultimate.socialText || '', config?.ultimate.title || '終極五維尋茶檔案', config?.ultimate.socialText || '')}
+                        onClick={() => triggerSocialShare('instagram', config?.ultimate.socialText || '')}
                         className="w-11 h-11 rounded-full flex items-center justify-center transition-all scale-100 active:scale-95 shadow-sm overflow-hidden bg-transparent shrink-0"
                         title="立即分享至 Instagram"
                       >
@@ -575,7 +565,7 @@ export const BeginnerVillage: React.FC = () => {
 
                       {/* Facebook */}
                       <button
-                        onClick={() => triggerSocialShare('facebook', config?.ultimate.image || '', config?.ultimate.socialText || '', config?.ultimate.title || '終極五維尋茶檔案', config?.ultimate.socialText || '')}
+                        onClick={() => triggerSocialShare('facebook', config?.ultimate.socialText || '')}
                         className="w-11 h-11 rounded-full flex items-center justify-center transition-all scale-100 active:scale-95 shadow-sm overflow-hidden bg-transparent shrink-0"
                         title="立即分享至 Facebook"
                       >
@@ -589,7 +579,24 @@ export const BeginnerVillage: React.FC = () => {
                           </div>
                         )}
                       </button>
+
+                      {/* 一鍵複製連結 */}
+                      <button
+                        onClick={() => {
+                          navigator.clipboard.writeText('https://meandtea.vercel.app/beginner-village').then(() => {
+                            toast.success('連結已複製！');
+                          }).catch(() => {
+                            toast.error('複製失敗，請手動複製');
+                          });
+                        }}
+                        className="w-11 h-11 rounded-full flex items-center justify-center transition-all scale-100 active:scale-95 shadow-sm bg-[#707040] hover:bg-[#5c5c34] text-white shrink-0"
+                        title="複製分享連結"
+                      >
+                        <Copy size={18} />
+                      </button>
                     </div>
+                  </div>
+                </div>
 
                     {/* LINE 引流橫幅 */}
                     {config?.line_banner_url && config?.line_official_link && (
@@ -610,18 +617,16 @@ export const BeginnerVillage: React.FC = () => {
                       </div>
                     )}
                   </div>
-                </div>
 
-                <div className="pt-6 border-t border-stone-100">
-                  <button
-                    onClick={() => setShowUltimateScreen(false)}
-                    className="text-stone-500 hover:text-stone-800 text-xs font-semibold underline underline-offset-4 tracking-wider"
-                  >
-                    返回新手村探索地圖
-                  </button>
-                </div>
-              </div>
-            </motion.div>
+                  <div className="pt-6 border-t border-stone-100">
+                    <button
+                      onClick={() => setShowUltimateScreen(false)}
+                      className="text-stone-500 hover:text-stone-800 text-xs font-semibold underline underline-offset-4 tracking-wider"
+                    >
+                      返回新手村探索地圖
+                    </button>
+                  </div>
+                </motion.div>
           ) : activeStageId ? (
             
             /* 2. SPECIFIC STAGE EXPERIENCE PATH */
@@ -720,7 +725,7 @@ export const BeginnerVillage: React.FC = () => {
                       <div className="flex items-center justify-center gap-4">
                         {/* LINE */}
                         <button
-                          onClick={() => triggerSocialShare('line', stageResult.image, stageResult.socialText || '', stageResult.title, stageResult.description || stageResult.socialText)}
+                          onClick={() => triggerSocialShare('line', stageResult.socialText || '')}
                           className="w-11 h-11 rounded-full flex items-center justify-center transition-all scale-100 active:scale-95 shadow-sm overflow-hidden bg-transparent shrink-0"
                           title="立即分享至 LINE"
                         >
@@ -737,7 +742,7 @@ export const BeginnerVillage: React.FC = () => {
 
                         {/* Threads */}
                         <button
-                          onClick={() => triggerSocialShare('threads', stageResult.image, stageResult.socialText || '', stageResult.title, stageResult.description || stageResult.socialText)}
+                          onClick={() => triggerSocialShare('threads', stageResult.socialText || '')}
                           className="w-11 h-11 rounded-full flex items-center justify-center transition-all scale-100 active:scale-95 shadow-sm overflow-hidden bg-transparent shrink-0"
                           title="立即分享至 Threads"
                         >
@@ -754,7 +759,7 @@ export const BeginnerVillage: React.FC = () => {
 
                         {/* Instagram */}
                         <button
-                          onClick={() => triggerSocialShare('instagram', stageResult.image, stageResult.socialText || '', stageResult.title, stageResult.description || stageResult.socialText)}
+                          onClick={() => triggerSocialShare('instagram', stageResult.socialText || '')}
                           className="w-11 h-11 rounded-full flex items-center justify-center transition-all scale-100 active:scale-95 shadow-sm overflow-hidden bg-transparent shrink-0"
                           title="立即分享至 Instagram"
                         >
@@ -771,7 +776,7 @@ export const BeginnerVillage: React.FC = () => {
 
                         {/* Facebook */}
                         <button
-                          onClick={() => triggerSocialShare('facebook', stageResult.image, stageResult.socialText || '', stageResult.title, stageResult.description || stageResult.socialText)}
+                          onClick={() => triggerSocialShare('facebook', stageResult.socialText || '')}
                           className="w-11 h-11 rounded-full flex items-center justify-center transition-all scale-100 active:scale-95 shadow-sm overflow-hidden bg-transparent shrink-0"
                           title="立即分享至 Facebook"
                         >
@@ -784,6 +789,21 @@ export const BeginnerVillage: React.FC = () => {
                               </svg>
                             </div>
                           )}
+                        </button>
+
+                        {/* 一鍵複製連結 */}
+                        <button
+                          onClick={() => {
+                            navigator.clipboard.writeText('https://meandtea.vercel.app/beginner-village').then(() => {
+                              toast.success('連結已複製！');
+                            }).catch(() => {
+                              toast.error('複製失敗，請手動複製');
+                            });
+                          }}
+                          className="w-11 h-11 rounded-full flex items-center justify-center transition-all scale-100 active:scale-95 shadow-sm bg-[#707040] hover:bg-[#5c5c34] text-white shrink-0"
+                          title="複製分享連結"
+                        >
+                          <Copy size={18} />
                         </button>
                       </div>
 
