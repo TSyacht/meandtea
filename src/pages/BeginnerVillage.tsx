@@ -1097,13 +1097,20 @@ export const BeginnerVillage: React.FC = () => {
                     </div>
                     
                     {/* 動態填滿進度條元件 */}
-                    <div className="w-full bg-stone-100 rounded-full h-2.5 overflow-hidden border border-stone-200/40 relative">
-                      <motion.div 
-                        initial={{ width: 0 }}
-                        animate={{ width: `${completedStages.length * 20}%` }}
-                        transition={{ type: "spring", stiffness: 60, damping: 15 }}
-                        className="bg-[#707040] h-full rounded-full shadow-sm"
-                      />
+                    <div className="grid grid-cols-5 gap-2 w-full">
+                      {[0, 1, 2, 3, 4].map((i) => {
+                        const isFilled = completedStages.length > i;
+                        return (
+                          <div key={i} className="relative h-2.5 bg-stone-100 rounded-full overflow-hidden border border-stone-200/40 shadow-inner">
+                            <motion.div
+                              initial={false}
+                              animate={{ width: isFilled ? '100%' : '0%' }}
+                              transition={{ type: "spring", stiffness: 70, damping: 15, delay: i * 0.05 }}
+                              className="bg-[#707040] h-full rounded-full shadow-sm"
+                            />
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 )}
@@ -1185,39 +1192,60 @@ export const BeginnerVillage: React.FC = () => {
               </div>
 
               {/* Prompt showing how to get the dossier */}
-              <div className={`max-w-md mx-auto p-5 rounded-2xl border text-center transition-all duration-300 ${
+              <div className={`max-w-md mx-auto p-5 rounded-2xl border text-left transition-all duration-300 ${
                 hasMapBg 
-                  ? 'bg-white/45 backdrop-blur-md border-white/20 shadow-sm text-stone-850' 
-                  : 'bg-stone-100/60 border-stone-200/40 text-stone-600'
+                  ? 'bg-white/70 backdrop-blur-md border-white/30 shadow-sm' 
+                  : 'bg-stone-100/60 border-stone-200/40'
               }`}>
-                <p className={`text-xs flex items-center justify-center gap-1.5 leading-relaxed whitespace-pre-wrap ${
-                  hasMapBg ? 'text-stone-800 font-medium' : 'text-stone-600'
-                }`}>
-                  <Sparkles size={14} className="text-[#707040] shrink-0" /> 
-                  {config?.map_footer_tip || '通關全部 5 個獨立區域，即可解鎖終極的「五維尋茶總檔案」及專屬尊享折價優惠碼！'}
-                </p>
-                
-                {completedStages.length > 0 && completedStages.length < 5 && (
-                  <div className="mt-2.5">
-                    <div className="w-full bg-stone-200 rounded-full h-1.5 overflow-hidden">
-                      <div 
-                        className="bg-[#707040] h-full rounded-full transition-all duration-500"
-                        style={{ width: `${(completedStages.length / 5) * 100}%` }}
-                      />
-                    </div>
-                    <span className="text-[10px] text-stone-500 mt-1 block">
-                      還差 {5 - completedStages.length} 關即可解鎖終極大獎
-                    </span>
-                  </div>
-                )}
+                {/* 增加百分比動態數值 */}
+                <div className="flex items-center justify-between text-xs font-bold mb-2 text-[#707040]">
+                  <span className="flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#707040] animate-pulse" />
+                    目前進度：{completedStages.length * 20}%
+                  </span>
+                  <span className="text-stone-500 text-[11px]">已完成 {completedStages.length}/5 關卡</span>
+                </div>
+
+                {/* 進度條結構轉型（刻度化）：5等分刻度設計 */}
+                <div className="grid grid-cols-5 gap-2 my-2.5">
+                  {[0, 1, 2, 3, 4].map((i) => {
+                    const isFilled = completedStages.length > i;
+                    return (
+                      <div key={i} className="relative h-2.5 bg-stone-200/60 rounded-full overflow-hidden border border-stone-300/10 shadow-inner">
+                        <motion.div
+                          initial={false}
+                          animate={{ width: isFilled ? '100%' : '0%' }}
+                          transition={{ type: "spring", stiffness: 70, damping: 15, delay: i * 0.05 }}
+                          className="bg-[#707040] h-full rounded-full shadow-sm"
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* 動態提示語句邏輯 */}
+                <div className="mt-3 flex items-start gap-2">
+                  <Sparkles size={14} className="text-[#E39B24] shrink-0 mt-0.5 animate-pulse" />
+                  <p className="text-xs text-stone-700 leading-relaxed font-bold">
+                    {completedStages.length === 4 ? (
+                      "再完成最後 1 關，立即解鎖終極五維檔案與專屬優惠！"
+                    ) : completedStages.length === 5 ? (
+                      "恭喜通關！終極五維檔案與專屬優惠已解鎖！"
+                    ) : (
+                      `加油，還差 ${5 - completedStages.length} 關即可解鎖終極大獎`
+                    )}
+                  </p>
+                </div>
 
                 {completedStages.length >= 5 && (
-                  <button
-                    onClick={() => setShowUltimateScreen(true)}
-                    className="mt-3 inline-flex items-center gap-1.5 text-xs bg-amber-500 text-white font-bold py-2 px-5 rounded-full hover:bg-amber-600 transition shadow animate-pulse"
-                  >
-                    <Award size={13} /> 前往領取我的終極五維尋茶檔案
-                  </button>
+                  <div className="mt-4 text-center">
+                    <button
+                      onClick={() => setShowUltimateScreen(true)}
+                      className="w-full inline-flex items-center justify-center gap-1.5 text-xs bg-amber-500 hover:bg-amber-600 text-white font-bold py-2.5 px-5 rounded-xl transition shadow-md animate-pulse active:scale-98"
+                    >
+                      <Award size={14} /> 前往領取我的終極五維尋茶檔案
+                    </button>
+                  </div>
                 )}
               </div>
             </motion.div>
