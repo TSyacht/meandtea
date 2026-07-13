@@ -1406,6 +1406,91 @@ export const AdminBeginnerVillage: React.FC = () => {
               </div>
             </div>
           </div>
+
+          {/* Section: Graduation Reward Card Settings */}
+          <div className="bg-white border border-stone-100 rounded-2xl p-6 shadow-sm space-y-6 text-left">
+            <div>
+              <h3 className="text-sm font-bold text-stone-800 tracking-wide flex items-center gap-1.5">
+                <Award size={16} className="text-[#707040]" />
+                畢業禮卡片設定 (Graduation Reward Card Settings)
+              </h3>
+              <p className="text-sm text-[#4b5563] font-normal mt-1 leading-normal">
+                自訂通關 5 關後，對應渲染之畢業禮卡片的圖標與文字內容。
+              </p>
+            </div>
+
+            <div className="space-y-5">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-stone-700 block mb-1">畢業禮卡片 Icon 圖示上傳 (支援 JPG/PNG/SVG 格式)</label>
+                <ImageUploader
+                  value={config.graduation_icon_url || ''}
+                  onChange={(url) => {
+                    setConfig({
+                      ...config,
+                      graduation_icon_url: url
+                    });
+                  }}
+                  label=""
+                  hint="建議上傳寬高 1:1 的精緻向量圖標或圖片，不設定則顯示預設向量獎章 (Award) 圖標。"
+                  aspectRatio="aspect-square max-w-[120px]"
+                  bucket="novice-village"
+                  pathPrefix="graduation"
+                  customFileName="graduation_icon"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-[#707040] block">小標題標籤 (Tag)</label>
+                <input
+                  type="text"
+                  value={config.graduation_tag || ''}
+                  onChange={(e) => {
+                    setConfig({
+                      ...config,
+                      graduation_tag: e.target.value
+                    });
+                  }}
+                  placeholder="預設：VILLAGE GRADUATION REWARD"
+                  className="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 text-sm font-medium text-stone-700"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-[#707040] block">畢業禮主標題 (Title)</label>
+                <input
+                  type="text"
+                  value={config.graduation_title || ''}
+                  onChange={(e) => {
+                    setConfig({
+                      ...config,
+                      graduation_title: e.target.value
+                    });
+                  }}
+                  placeholder="預設：恭喜你完成了新手村所有的任務！"
+                  className="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 text-sm font-medium text-stone-700"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-[#707040] block">畢業禮內容文字 (Content Text)</label>
+                <textarea
+                  value={config.graduation_text || ''}
+                  onChange={(e) => {
+                    setConfig({
+                      ...config,
+                      graduation_text: e.target.value
+                    });
+                  }}
+                  placeholder="預設：加入 LINE 官方帳號，輸入【新手村折價券】，即可領取【滿 500 折 50】折價券"
+                  className="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 text-xs font-medium"
+                  rows={4}
+                />
+                <p className="text-[11px] text-stone-400 mt-1">
+                  提示：在此輸入的文字中，若包含中括號如 <span className="font-semibold text-stone-600">【文字】</span>，系統會自動在前端套用特別的高亮和加粗樣式，方便強調關鍵字或折價代碼。
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 

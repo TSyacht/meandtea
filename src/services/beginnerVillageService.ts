@@ -65,6 +65,10 @@ export interface BeginnerVillageConfig {
   navbar_brand_text_size?: number;
   line_banner_url?: string;
   line_official_link?: string;
+  graduation_icon_url?: string;
+  graduation_tag?: string;
+  graduation_title?: string;
+  graduation_text?: string;
 }
 
 export const DEFAULT_VILLAGE_CONFIG: BeginnerVillageConfig = {
@@ -84,6 +88,10 @@ export const DEFAULT_VILLAGE_CONFIG: BeginnerVillageConfig = {
   share_icon_facebook: '',
   line_banner_url: '',
   line_official_link: '',
+  graduation_icon_url: '',
+  graduation_tag: 'VILLAGE GRADUATION REWARD',
+  graduation_title: '恭喜你完成了新手村所有的任務！',
+  graduation_text: '加入 LINE 官方帳號，輸入【新手村折價券】，即可領取【滿 500 折 50】折價券',
   stages: [
     {
       id: 'personality',

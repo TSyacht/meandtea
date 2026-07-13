@@ -245,6 +245,23 @@ export const BeginnerVillage: React.FC = () => {
     });
   };
 
+  const renderFormattedText = (text: string) => {
+    if (!text) return null;
+    const parts = text.split(/(【[^】]+】)/g);
+    return parts.map((part, index) => {
+      if (part.startsWith('【') && part.endsWith('】')) {
+        const isCoupon = part.includes('折價') || part.includes('折') || part.includes('500');
+        const innerText = part.slice(1, -1);
+        return (
+          <span key={index} className={isCoupon ? "text-amber-700 font-bold font-serif" : "text-[#707040] font-bold"}>
+            【{innerText}】
+          </span>
+        );
+      }
+      return part;
+    });
+  };
+
   const handleImageDownload = async (imageUrl: string, titleName: string) => {
     try {
       toast.loading('準備檔案中...');
@@ -604,17 +621,25 @@ export const BeginnerVillage: React.FC = () => {
                       <div className="mt-4 p-5 bg-gradient-to-br from-[#FAF7F2] to-[#FAF7F2] rounded-2xl border-2 border-dashed border-[#707040]/30 shadow-sm relative overflow-hidden max-w-md mx-auto text-left animate-fadeIn">
                         <div className="relative flex items-center gap-4">
                           <div className="p-3 bg-[#707040]/5 rounded-2xl border border-[#707040]/10 text-[#707040] shrink-0 flex items-center justify-center w-14 h-14">
-                            <Award size={26} strokeWidth={1.2} className="animate-pulse" />
+                            {config?.graduation_icon_url ? (
+                              <img src={config.graduation_icon_url} alt="graduation icon" className="w-8 h-8 object-contain" referrerPolicy="no-referrer" />
+                            ) : (
+                              <Award size={26} strokeWidth={1.2} className="animate-pulse" />
+                            )}
                           </div>
                           <div className="space-y-1 flex-1 pr-2">
                             <h4 className="text-[10px] font-bold tracking-widest text-[#707040]/70 uppercase">
-                              VILLAGE GRADUATION REWARD
+                              {config?.graduation_tag || 'VILLAGE GRADUATION REWARD'}
                             </h4>
                             <p className="text-stone-800 text-xs md:text-sm font-bold leading-normal">
-                              恭喜你完成了新手村所有的任務！
+                              {config?.graduation_title || '恭喜你完成了新手村所有的任務！'}
                             </p>
-                            <p className="text-stone-600 text-xs leading-relaxed">
-                              加入 LINE 官方帳號，輸入 <span className="text-[#707040] font-bold">【新手村折價券】</span>，即可領取 <span className="text-amber-700 font-bold font-serif">【滿 500 折 50】</span>折價券
+                            <p className="text-stone-600 text-xs leading-relaxed whitespace-pre-line">
+                              {config?.graduation_text ? renderFormattedText(config.graduation_text) : (
+                                <>
+                                  加入 LINE 官方帳號，輸入 <span className="text-[#707040] font-bold">【新手村折價券】</span>，即可領取 <span className="text-amber-700 font-bold font-serif">【滿 500 折 50】</span>折價券
+                                </>
+                              )}
                             </p>
                           </div>
                         </div>
@@ -842,17 +867,25 @@ export const BeginnerVillage: React.FC = () => {
                         <div className="mt-4 p-5 bg-gradient-to-br from-[#FAF7F2] to-[#FAF7F2] rounded-2xl border-2 border-dashed border-[#707040]/30 shadow-sm relative overflow-hidden max-w-md mx-auto text-left animate-fadeIn">
                           <div className="relative flex items-center gap-4">
                             <div className="p-3 bg-[#707040]/5 rounded-2xl border border-[#707040]/10 text-[#707040] shrink-0 flex items-center justify-center w-14 h-14">
-                              <Award size={26} strokeWidth={1.2} className="animate-pulse" />
+                              {config?.graduation_icon_url ? (
+                                <img src={config.graduation_icon_url} alt="graduation icon" className="w-8 h-8 object-contain" referrerPolicy="no-referrer" />
+                              ) : (
+                                <Award size={26} strokeWidth={1.2} className="animate-pulse" />
+                              )}
                             </div>
                             <div className="space-y-1 flex-1 pr-2">
                               <h4 className="text-[10px] font-bold tracking-widest text-[#707040]/70 uppercase">
-                                VILLAGE GRADUATION REWARD
+                                {config?.graduation_tag || 'VILLAGE GRADUATION REWARD'}
                               </h4>
                               <p className="text-stone-800 text-xs md:text-sm font-bold leading-normal">
-                                恭喜你完成了新手村所有的任務！
+                                {config?.graduation_title || '恭喜你完成了新手村所有的任務！'}
                               </p>
-                              <p className="text-stone-600 text-xs leading-relaxed">
-                                加入 LINE 官方帳號，輸入 <span className="text-[#707040] font-bold">【新手村折價券】</span>，即可領取 <span className="text-amber-700 font-bold font-serif">【滿 500 折 50】</span>折價券
+                              <p className="text-stone-600 text-xs leading-relaxed whitespace-pre-line">
+                                {config?.graduation_text ? renderFormattedText(config.graduation_text) : (
+                                  <>
+                                    加入 LINE 官方帳號，輸入 <span className="text-[#707040] font-bold">【新手村折價券】</span>，即可領取 <span className="text-amber-700 font-bold font-serif">【滿 500 折 50】</span>折價券
+                                  </>
+                                )}
                               </p>
                             </div>
                           </div>
