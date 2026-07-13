@@ -273,7 +273,10 @@ export const BeginnerVillage: React.FC = () => {
     const message = invitationText ? `${invitationText}\n\n👉 立即前往探索新手村專屬測驗：${shareUrl}` : `👉 立即前往探索新手村專屬測驗：${shareUrl}`;
 
     if (platform === 'line') {
-      window.open(`https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(invitationText || '來測測你的尋茶人格與專屬五維檔案吧！')}`, '_blank');
+      const lineText = invitationText || '來測測你的尋茶人格與專屬五維檔案吧！';
+      const hasUrl = lineText.includes('http://') || lineText.includes('https://');
+      const finalLineText = hasUrl ? lineText : `${lineText}\n\n👉 立即前往探索新手村專屬測驗：${shareUrl}`;
+      window.open(`https://social-plugins.line.me/lineit/share?url=&text=${encodeURIComponent(finalLineText)}`, '_blank');
     } else if (platform === 'threads') {
       window.open(`https://threads.net/intent/post?text=${encodeURIComponent(message)}`, '_blank');
     } else if (platform === 'facebook') {
