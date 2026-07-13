@@ -482,34 +482,6 @@ export const BeginnerVillage: React.FC = () => {
                   />
                 </div>
 
-                {/* Exclusive Coupon Code Component */}
-                <div className="bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-amber-500/10 border border-amber-500/20 rounded-2xl p-6 relative max-w-md mx-auto">
-                  <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-amber-500 text-white text-[9px] font-extrabold px-3 py-0.5 rounded-full tracking-widest uppercase shadow">
-                    CONGRATS GIFT
-                  </div>
-                  <h3 className="text-xs text-amber-800 font-bold mb-1 tracking-wide">五關通關專屬「折價優惠卷碼」</h3>
-                  <div className="flex items-center justify-center gap-3 mt-3">
-                    <span className="font-mono text-xl xl:text-2xl font-extrabold text-amber-700 tracking-widest border-2 border-dashed border-amber-600/30 px-5 py-2 rounded-xl bg-white select-all">
-                      {config?.ultimate.coupon || 'MIYE520NEWBIE'}
-                    </span>
-                    <button
-                      onClick={() => {
-                        navigator.clipboard.writeText(config?.ultimate.coupon || 'MIYE520NEWBIE');
-                        setCopiedCoupon(true);
-                        toast.success('優惠碼複製成功！');
-                        setTimeout(() => setCopiedCoupon(false), 2000);
-                      }}
-                      className="bg-stone-800 text-white hover:bg-stone-700 p-3 rounded-xl transition-all active:scale-95"
-                      title="複製優惠碼"
-                    >
-                      {copiedCoupon ? <Check size={18} className="text-green-500" /> : <Copy size={18} />}
-                    </button>
-                  </div>
-                  <p className="text-[10px] text-stone-500 mt-2.5">
-                    結帳時輸入本優惠碼，即可享有獨家新手探路尊榮專享禮遇。
-                  </p>
-                </div>
-
                 {/* Download and Share components */}
                 <div className="space-y-4 max-w-md mx-auto pt-2 border-t border-stone-100">
                   <div className="pt-4 space-y-2">
@@ -629,21 +601,16 @@ export const BeginnerVillage: React.FC = () => {
 
                     {/* 畢業禮機制 結業獎勵卡 (測驗完成數達 5 個時額外渲染) */}
                     {completedStages.length >= 5 && (
-                      <div className="mt-4 p-5 bg-gradient-to-br from-[#FAF7F2] to-[#F3EFE9] rounded-2xl border-2 border-dashed border-[#707040]/30 shadow-sm relative overflow-hidden max-w-md mx-auto text-left animate-fadeIn">
-                        {/* Decorative seal/badge */}
-                        <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-[#707040]/5 rounded-full flex items-center justify-center border border-[#707040]/10 pointer-events-none transform rotate-12">
-                          <Award size={48} className="text-[#707040]/15" />
-                        </div>
-
-                        <div className="relative flex items-start gap-3">
-                          <div className="p-2 bg-[#707040]/10 rounded-xl text-[#707040] shrink-0 mt-0.5">
-                            <Award size={20} className="animate-pulse" />
+                      <div className="mt-4 p-5 bg-gradient-to-br from-[#FAF7F2] to-[#FAF7F2] rounded-2xl border-2 border-dashed border-[#707040]/30 shadow-sm relative overflow-hidden max-w-md mx-auto text-left animate-fadeIn">
+                        <div className="relative flex items-center gap-4">
+                          <div className="p-3 bg-[#707040]/5 rounded-2xl border border-[#707040]/10 text-[#707040] shrink-0 flex items-center justify-center w-14 h-14">
+                            <Award size={26} strokeWidth={1.2} className="animate-pulse" />
                           </div>
-                          <div className="space-y-1.5 flex-1 pr-6">
-                            <h4 className="text-[10px] font-bold tracking-widest text-[#707040] uppercase">
+                          <div className="space-y-1 flex-1 pr-2">
+                            <h4 className="text-[10px] font-bold tracking-widest text-[#707040]/70 uppercase">
                               VILLAGE GRADUATION REWARD
                             </h4>
-                            <p className="text-stone-800 text-xs md:text-sm font-bold leading-relaxed">
+                            <p className="text-stone-800 text-xs md:text-sm font-bold leading-normal">
                               恭喜你完成了新手村所有的任務！
                             </p>
                             <p className="text-stone-600 text-xs leading-relaxed">
@@ -872,21 +839,16 @@ export const BeginnerVillage: React.FC = () => {
 
                       {/* 畢業禮機制 結業獎勵卡 (測驗完成數達 5 個時額外渲染) */}
                       {completedStages.length >= 5 && (
-                        <div className="mt-4 p-5 bg-gradient-to-br from-[#FAF7F2] to-[#F3EFE9] rounded-2xl border-2 border-dashed border-[#707040]/30 shadow-sm relative overflow-hidden max-w-md mx-auto text-left animate-fadeIn">
-                          {/* Decorative seal/badge */}
-                          <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-[#707040]/5 rounded-full flex items-center justify-center border border-[#707040]/10 pointer-events-none transform rotate-12">
-                            <Award size={48} className="text-[#707040]/15" />
-                          </div>
-
-                          <div className="relative flex items-start gap-3">
-                            <div className="p-2 bg-[#707040]/10 rounded-xl text-[#707040] shrink-0 mt-0.5">
-                              <Award size={20} className="animate-pulse" />
+                        <div className="mt-4 p-5 bg-gradient-to-br from-[#FAF7F2] to-[#FAF7F2] rounded-2xl border-2 border-dashed border-[#707040]/30 shadow-sm relative overflow-hidden max-w-md mx-auto text-left animate-fadeIn">
+                          <div className="relative flex items-center gap-4">
+                            <div className="p-3 bg-[#707040]/5 rounded-2xl border border-[#707040]/10 text-[#707040] shrink-0 flex items-center justify-center w-14 h-14">
+                              <Award size={26} strokeWidth={1.2} className="animate-pulse" />
                             </div>
-                            <div className="space-y-1.5 flex-1 pr-6">
-                              <h4 className="text-[10px] font-bold tracking-widest text-[#707040] uppercase">
+                            <div className="space-y-1 flex-1 pr-2">
+                              <h4 className="text-[10px] font-bold tracking-widest text-[#707040]/70 uppercase">
                                 VILLAGE GRADUATION REWARD
                               </h4>
-                              <p className="text-stone-800 text-xs md:text-sm font-bold leading-relaxed">
+                              <p className="text-stone-800 text-xs md:text-sm font-bold leading-normal">
                                 恭喜你完成了新手村所有的任務！
                               </p>
                               <p className="text-stone-600 text-xs leading-relaxed">
