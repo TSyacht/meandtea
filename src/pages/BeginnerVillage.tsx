@@ -616,6 +616,40 @@ export const BeginnerVillage: React.FC = () => {
                         </a>
                       </div>
                     )}
+
+                    {/* 通用通知 */}
+                    <div className="mt-4 p-4 bg-[#707040]/5 rounded-2xl border border-[#707040]/10 text-center max-w-md mx-auto">
+                      <p className="text-stone-700 text-xs md:text-sm font-semibold leading-relaxed">
+                        加入 LINE 官方帳號，輸入 <span className="text-[#707040] font-extrabold font-serif">【覓野茶】</span>，即可領取首購免運券
+                      </p>
+                    </div>
+
+                    {/* 畢業禮機制 結業獎勵卡 (測驗完成數達 5 個時額外渲染) */}
+                    {completedStages.length >= 5 && (
+                      <div className="mt-4 p-5 bg-gradient-to-br from-[#FAF7F2] to-[#F3EFE9] rounded-2xl border-2 border-dashed border-[#707040]/30 shadow-sm relative overflow-hidden max-w-md mx-auto text-left animate-fadeIn">
+                        {/* Decorative seal/badge */}
+                        <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-[#707040]/5 rounded-full flex items-center justify-center border border-[#707040]/10 pointer-events-none transform rotate-12">
+                          <Award size={48} className="text-[#707040]/15" />
+                        </div>
+
+                        <div className="relative flex items-start gap-3">
+                          <div className="p-2 bg-[#707040]/10 rounded-xl text-[#707040] shrink-0 mt-0.5">
+                            <Award size={20} className="animate-pulse" />
+                          </div>
+                          <div className="space-y-1.5 flex-1 pr-6">
+                            <h4 className="text-[10px] font-bold tracking-widest text-[#707040] uppercase">
+                              VILLAGE GRADUATION REWARD
+                            </h4>
+                            <p className="text-stone-800 text-xs md:text-sm font-bold leading-relaxed">
+                              恭喜你完成了新手村所有的任務！
+                            </p>
+                            <p className="text-stone-600 text-xs leading-relaxed">
+                              加入 LINE 官方帳號，輸入 <span className="text-[#707040] font-bold">【新手村折價券】</span>，即可領取 <span className="text-amber-700 font-bold font-serif">【滿 500 折 50】</span>折價券
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   <div className="pt-6 border-t border-stone-100">
@@ -825,6 +859,40 @@ export const BeginnerVillage: React.FC = () => {
                           </a>
                         </div>
                       )}
+
+                      {/* 通用通知 */}
+                      <div className="mt-4 p-4 bg-[#707040]/5 rounded-2xl border border-[#707040]/10 text-center max-w-md mx-auto">
+                        <p className="text-stone-700 text-xs md:text-sm font-semibold leading-relaxed">
+                          加入 LINE 官方帳號，輸入 <span className="text-[#707040] font-extrabold font-serif">【覓野茶】</span>，即可領取首購免運券
+                        </p>
+                      </div>
+
+                      {/* 畢業禮機制 結業獎勵卡 (測驗完成數達 5 個時額外渲染) */}
+                      {completedStages.length >= 5 && (
+                        <div className="mt-4 p-5 bg-gradient-to-br from-[#FAF7F2] to-[#F3EFE9] rounded-2xl border-2 border-dashed border-[#707040]/30 shadow-sm relative overflow-hidden max-w-md mx-auto text-left animate-fadeIn">
+                          {/* Decorative seal/badge */}
+                          <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-[#707040]/5 rounded-full flex items-center justify-center border border-[#707040]/10 pointer-events-none transform rotate-12">
+                            <Award size={48} className="text-[#707040]/15" />
+                          </div>
+
+                          <div className="relative flex items-start gap-3">
+                            <div className="p-2 bg-[#707040]/10 rounded-xl text-[#707040] shrink-0 mt-0.5">
+                              <Award size={20} className="animate-pulse" />
+                            </div>
+                            <div className="space-y-1.5 flex-1 pr-6">
+                              <h4 className="text-[10px] font-bold tracking-widest text-[#707040] uppercase">
+                                VILLAGE GRADUATION REWARD
+                              </h4>
+                              <p className="text-stone-800 text-xs md:text-sm font-bold leading-relaxed">
+                                恭喜你完成了新手村所有的任務！
+                              </p>
+                              <p className="text-stone-600 text-xs leading-relaxed">
+                                加入 LINE 官方帳號，輸入 <span className="text-[#707040] font-bold">【新手村折價券】</span>，即可領取 <span className="text-amber-700 font-bold font-serif">【滿 500 折 50】</span>折價券
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -999,34 +1067,46 @@ export const BeginnerVillage: React.FC = () => {
                 </p>
 
                 {completedStages.length > 0 && (
-                  <div className="flex items-center justify-center gap-4 pt-3">
-                    <span className="text-xs font-mono font-bold text-stone-500">
-                      探索度已完成： {completedStages.length} / 5
-                    </span>
-                    {!showResetConfirm ? (
-                      <button
-                        onClick={() => setShowResetConfirm(true)}
-                        className="text-[10px] text-stone-400 border border-stone-200 hover:border-stone-400 hover:text-stone-600 px-2.5 py-1 rounded-xl transition-all font-semibold hover:bg-stone-105"
-                      >
-                        重新開始測驗
-                      </button>
-                    ) : (
-                      <div className="flex items-center gap-2 bg-amber-50/60 border border-amber-100 px-3 py-1.5 rounded-xl">
-                        <span className="text-[10px] text-amber-800 font-bold">確認清除所有前台作答進度？</span>
+                  <div className="max-w-md mx-auto pt-3 space-y-4">
+                    <div className="flex items-center justify-between gap-4">
+                      <span className="text-xs font-semibold tracking-wider text-stone-600">
+                        探測度已完成：{completedStages.length * 20}%
+                      </span>
+                      {!showResetConfirm ? (
                         <button
-                          onClick={handleRestartAll}
-                          className="text-[10px] bg-red-600 hover:bg-red-700 text-white px-2 py-0.5 rounded-lg font-bold transition-all"
+                          onClick={() => setShowResetConfirm(true)}
+                          className="text-[10px] text-stone-400 border border-stone-200 hover:border-stone-400 hover:text-stone-600 px-2.5 py-1 rounded-xl transition-all font-semibold hover:bg-stone-50"
                         >
-                          確定重置
+                          重新開始測驗
                         </button>
-                        <button
-                          onClick={() => setShowResetConfirm(false)}
-                          className="text-[10px] bg-white text-stone-600 border border-stone-200 hover:bg-stone-50 px-2 py-0.5 rounded-lg font-medium transition-all"
-                        >
-                          取消
-                        </button>
-                      </div>
-                    )}
+                      ) : (
+                        <div className="flex items-center gap-2 bg-amber-50/60 border border-amber-100 px-3 py-1.5 rounded-xl">
+                          <span className="text-[10px] text-amber-800 font-bold">確認清除所有前台作答進度？</span>
+                          <button
+                            onClick={handleRestartAll}
+                            className="text-[10px] bg-red-600 hover:bg-red-700 text-white px-2 py-0.5 rounded-lg font-bold transition-all"
+                          >
+                            確定重置
+                          </button>
+                          <button
+                            onClick={() => setShowResetConfirm(false)}
+                            className="text-[10px] bg-white text-stone-600 border border-stone-200 hover:bg-stone-50 px-2 py-0.5 rounded-lg font-medium transition-all"
+                          >
+                            取消
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* 動態填滿進度條元件 */}
+                    <div className="w-full bg-stone-100 rounded-full h-2.5 overflow-hidden border border-stone-200/40 relative">
+                      <motion.div 
+                        initial={{ width: 0 }}
+                        animate={{ width: `${completedStages.length * 20}%` }}
+                        transition={{ type: "spring", stiffness: 60, damping: 15 }}
+                        className="bg-[#707040] h-full rounded-full shadow-sm"
+                      />
+                    </div>
                   </div>
                 )}
               </div>
