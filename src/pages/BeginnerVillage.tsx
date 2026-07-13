@@ -979,7 +979,7 @@ export const BeginnerVillage: React.FC = () => {
 
                       {/* Options */}
                       <div className="space-y-3">
-                        {currentStage.questions[currentQuestionIndex].options.map((option) => (
+                        {currentStage.questions[currentQuestionIndex].options.map((option, index) => (
                           <button
                             key={option.id}
                             onClick={() => handleAnswerSubmit(
@@ -990,7 +990,7 @@ export const BeginnerVillage: React.FC = () => {
                             className="w-full text-left bg-stone-50/70 hover:bg-[#707040] hover:text-white border border-stone-200/50 hover:border-[#707040] rounded-2xl p-4 md:p-5 transition-all duration-200 shadow-sm flex items-center justify-between group"
                           >
                             <span className="text-sm md:text-base font-semibold tracking-wide pr-4 leading-relaxed transition-colors">
-                              {option.text}
+                              {String.fromCharCode(65 + index)}. {option.text}
                             </span>
                             <ChevronRight size={14} className="text-stone-400 group-hover:text-white shrink-0 group-hover:translate-x-1 transition-transform" />
                           </button>
