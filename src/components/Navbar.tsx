@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
-import { ShoppingCart, User, LogOut, Menu, X, Search, ChevronDown } from 'lucide-react';
+import { ShoppingCart, User, LogOut, Menu, X, Search, ChevronDown, Award } from 'lucide-react';
 import { useAuth } from '../AuthContext';
 import { supabase } from '../db';
 import { motion, AnimatePresence } from 'motion/react';
@@ -12,7 +12,7 @@ import { Trash2, Plus, Minus, AlertCircle, ChevronRight, Truck } from 'lucide-re
 
 export const Navbar: React.FC = () => {
   const { user, profile } = useAuth();
-  const { items, totalItems, subtotal, removeFromCart, updateQuantity, isFreeShipping, amountToFreeShipping } = useCart();
+  const { items, totalItems, subtotal, removeFromCart, updateQuantity, isFreeShipping, amountToFreeShipping, appliedDiscountRule, discountAmount } = useCart();
   const navigate = useNavigate();
   const location = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -421,30 +421,56 @@ export const Navbar: React.FC = () => {
               {items.length > 0 && (
                 <div className="p-8 bg-white border-t border-stone-100 space-y-6">
                   <div className="space-y-4">
-                    <div className="flex justify-between text-sm text-stone-500">
+                    <div className="flex justify-between text-xs text-stone-500">
                       <span>商品小計</span>
                       <span>NT$ {subtotal.toLocaleString()}</span>
                     </div>
-                    
-                    {!isFreeShipping ? (
-                      <div className="bg-orange-50 p-4 rounded-2xl flex items-center gap-3 text-orange-600">
-                        <AlertCircle size={18} />
-                        <p className="text-xs font-bold uppercase tracking-widest">
-                          還差 NT$ {amountToFreeShipping.toLocaleString()} 即可享免運！
-                        </p>
-                      </div>
-                    ) : (
-                      <div className="bg-zen-green/5 p-4 rounded-2xl flex items-center gap-3 text-zen-green">
-                        <Truck size={18} />
-                        <p className="text-xs font-bold uppercase tracking-widest">
-                          恭喜！已達免運門檻
-                        </p>
+
+                    {appliedDiscountRule && (
+                      <div className="flex justify-between text-xs text-emerald-600 font-medium">
+                        <span className="flex items-center gap-1">
+                          <Award size={14} className="animate-pulse" />
+                          已套用優惠: {appliedDiscountRule.name}
+                        </span>
+                        <span>- NT$ {discountAmount.toLocaleString()}</span>
                       </div>
                     )}
 
-                    <div className="flex justify-between pt-4 border-t border-stone-100">
-                      <span className="text-zen-wood font-bold">總計</span>
-                      <span className="text-2xl font-serif italic text-zen-wood">NT$ {subtotal.toLocaleString()}</span>
+                    <div className="flex justify-between text-xs text-stone-500">
+                      <span>運費</span>
+                      <span>{isFreeShipping ? '免運 ($0)' : 'NT$ 100'}</span>
+                    </div>
+                    
+                    {settings?.coupon_free_shipping_active !== false && (
+                      !isFreeShipping ? (
+                        <div className="bg-orange-50/70 p-3 rounded-xl flex items-center gap-2.5 text-orange-600 border border-orange-100/40">
+                          <AlertCircle size={16} />
+                          <p className="text-[10px] font-bold uppercase tracking-widest">
+                            還差 NT$ {amountToFreeShipping.toLocaleString()} 即可享免運！
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="bg-emerald-50 p-3 rounded-xl flex items-center gap-2.5 text-emerald-600 border border-emerald-100/40">
+                          <Truck size={16} />
+                          <p className="text-[10px] font-bold uppercase tracking-widest">
+                            已套用免運券優惠
+                          </p>
+                        </div>
+                      )
+                    )}
+
+                    <div className="flex justify-between pt-4 border-t border-stone-100 items-baseline">
+                      <div>
+                        <span className="text-zen-wood font-bold text-sm block">總計</span>
+                        {appliedDiscountRule && (
+                          <span className="text-[10px] text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded-full inline-block mt-0.5">
+                            已省下 NT$ {discountAmount.toLocaleString()}
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-2xl font-serif italic text-zen-wood">
+                        NT$ {Math.max(0, subtotal + (isFreeShipping ? 0 : 100) - discountAmount).toLocaleString()}
+                      </span>
                     </div>
                   </div>
 

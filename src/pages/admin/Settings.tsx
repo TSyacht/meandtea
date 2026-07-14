@@ -44,7 +44,7 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import toast from 'react-hot-toast';
 import { ImageUploader } from '../../components/admin/ImageUploader';
-import { getSettings, updateSettings, SiteSettings, BotanicalSpecimen, CoexistenceCardItem, CatDutyItem } from '../../services/settingsService';
+import { getSettings, updateSettings, SiteSettings, BotanicalSpecimen, CoexistenceCardItem, CatDutyItem, DiscountRule } from '../../services/settingsService';
 import { getAvatarUrl, getStorageUrl } from '../../services/productService';
 import { deleteFile, uploadImage } from '../../services/storageService';
 
@@ -307,6 +307,7 @@ export const AdminSettings: React.FC = () => {
     { id: 'about-coexist', label: '萬物共生與生態池', icon: <Leaf size={18} /> },
     { id: 'about-cat', label: '店長日常管理', icon: <UserCircle size={18} /> },
     { id: 'avatars', label: '頭像管理', icon: <UserCircle size={18} /> },
+    { id: 'coupons', label: '優惠券與購物車設定', icon: <Award size={18} /> },
   ];
 
   if (loading) {
@@ -1777,6 +1778,214 @@ export const AdminSettings: React.FC = () => {
                   </div>
                 </div>
               </DndContext>
+            </section>
+          </div>
+        )}
+
+        {/* 8. Coupons and Cart Promotions Settings */}
+        {activeTab === 'coupons' && settings && (
+          <div className="p-12 space-y-12">
+            <section className="space-y-8 text-left">
+              <div>
+                <h3 className="text-lg font-bold text-stone-800">優惠券與購物車設定</h3>
+                <p className="text-sm text-stone-400 mt-1">管理顧客在前台購物、結帳時的免運與滿額折扣條件。系統會即時在前端套用並在結帳明細中清楚標示優惠。</p>
+              </div>
+
+              {/* A. Free Shipping Coupon Setting */}
+              <div className="p-8 bg-stone-50 rounded-[2rem] border border-stone-100 space-y-6">
+                <div className="flex items-center justify-between border-b border-stone-200/60 pb-4">
+                  <div>
+                    <h4 className="text-sm font-bold text-stone-700 flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                      免運券開關設定
+                    </h4>
+                    <p className="text-xs text-stone-400 mt-1">控制是否啟動免運優惠。開啟後，當購物車總金額達免運門檻（目前預設為 $1000），即自動免運。</p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setSettings({
+                        ...settings,
+                        coupon_free_shipping_active: settings.coupon_free_shipping_active !== false ? false : true
+                      });
+                    }}
+                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                      settings.coupon_free_shipping_active !== false ? 'bg-[#707040]' : 'bg-stone-300'
+                    }`}
+                  >
+                    <span
+                      className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                        settings.coupon_free_shipping_active !== false ? 'translate-x-5' : 'translate-x-0'
+                      }`}
+                    />
+                  </button>
+                </div>
+                
+                <div className="flex items-center gap-3 bg-white p-4 rounded-xl border border-stone-200/60">
+                  <div className={`p-2 rounded-lg ${settings.coupon_free_shipping_active !== false ? 'bg-emerald-50 text-emerald-600' : 'bg-stone-100 text-stone-400'}`}>
+                    <Award size={18} />
+                  </div>
+                  <div>
+                    <span className="text-xs font-bold text-stone-700 block">
+                      目前狀態：{settings.coupon_free_shipping_active !== false ? '免運優惠已啟用' : '免運優惠已停用'}
+                    </span>
+                    <span className="text-[11px] text-stone-400 block mt-0.5">
+                      {settings.coupon_free_shipping_active !== false ? '顧客達到免運門檻時，前端結帳將自動將運費 $100 歸零，並顯示免運回饋訊息。' : '免運優惠已關閉，所有訂單皆計算基本運費 $100。'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* B. Min Spend Discount Rules Editor */}
+              <div className="p-8 bg-stone-50 rounded-[2rem] border border-stone-100 space-y-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-stone-200/60 pb-4 gap-4">
+                  <div>
+                    <h4 className="text-sm font-bold text-stone-700 flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+                      滿額折抵規則編輯器
+                    </h4>
+                    <p className="text-xs text-stone-400 mt-1">設定滿額折扣活動，例如「滿 $1000 折 $100」，可在此自由增刪、修改或暫停。</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const newRule: DiscountRule = {
+                        id: 'rule-' + Date.now(),
+                        type: 'threshold_discount',
+                        name: '滿千折百優惠',
+                        isActive: true,
+                        threshold: 1000,
+                        discountAmount: 100
+                      };
+                      setSettings({
+                        ...settings,
+                        coupon_rules: [...(settings.coupon_rules || []), newRule]
+                      });
+                      toast.success('已新增一項滿額折抵規則！');
+                    }}
+                    className="flex items-center justify-center gap-1.5 px-4 py-2 bg-[#707040] hover:bg-[#5a5a33] text-white text-xs font-bold rounded-xl transition shadow-sm self-start"
+                  >
+                    <Plus size={14} />
+                    新增折扣規則
+                  </button>
+                </div>
+
+                {(!settings.coupon_rules || settings.coupon_rules.length === 0) ? (
+                  <div className="bg-white rounded-2xl border border-stone-200/60 p-12 text-center space-y-2">
+                    <p className="text-stone-400 text-sm">目前無任何滿額折扣規則</p>
+                    <p className="text-stone-300 text-xs">點擊右上方按鈕新增第一筆促銷規則，讓顧客享受貼心優惠。</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {settings.coupon_rules.map((rule, idx) => (
+                      <div 
+                        key={rule.id}
+                        className={`bg-white p-6 rounded-2xl border transition-all ${
+                          rule.isActive ? 'border-stone-200 shadow-sm' : 'border-stone-200/40 opacity-70'
+                        }`}
+                      >
+                        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-center">
+                          {/* Active Toggle & Title */}
+                          <div className="lg:col-span-4 space-y-3">
+                            <div className="flex items-center gap-3">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const updated = [...(settings.coupon_rules || [])];
+                                  updated[idx] = { ...rule, isActive: !rule.isActive };
+                                  setSettings({ ...settings, coupon_rules: updated });
+                                }}
+                                className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                                  rule.isActive ? 'bg-[#707040]' : 'bg-stone-200'
+                                }`}
+                              >
+                                <span
+                                  className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                                    rule.isActive ? 'translate-x-4' : 'translate-x-0'
+                                  }`}
+                                />
+                              </button>
+                              <span className="text-xs font-bold text-stone-500">
+                                {rule.isActive ? '活動進行中' : '已暫停'}
+                              </span>
+                            </div>
+                            
+                            <div className="space-y-1">
+                              <label className="text-[10px] uppercase tracking-widest font-bold text-stone-400 block">優惠活動名稱</label>
+                              <input
+                                type="text"
+                                value={rule.name || ''}
+                                onChange={(e) => {
+                                  const updated = [...(settings.coupon_rules || [])];
+                                  updated[idx] = { ...rule, name: e.target.value };
+                                  setSettings({ ...settings, coupon_rules: updated });
+                                }}
+                                className="w-full px-3 py-2 bg-stone-50 border border-stone-200/60 rounded-lg text-stone-800 text-xs focus:ring-2 focus:ring-[#707040]/10 outline-none"
+                                placeholder="例：週年慶滿額折抵"
+                              />
+                            </div>
+                          </div>
+
+                          {/* Threshold */}
+                          <div className="lg:col-span-3 space-y-1">
+                            <label className="text-[10px] uppercase tracking-widest font-bold text-stone-400 block">滿額門檻 (Threshold)</label>
+                            <div className="relative">
+                              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 text-xs">$</span>
+                              <input
+                                type="number"
+                                value={rule.threshold ?? 0}
+                                onChange={(e) => {
+                                  const val = Math.max(0, parseInt(e.target.value) || 0);
+                                  const updated = [...(settings.coupon_rules || [])];
+                                  updated[idx] = { ...rule, threshold: val };
+                                  setSettings({ ...settings, coupon_rules: updated });
+                                }}
+                                className="w-full pl-7 pr-3 py-2 bg-stone-50 border border-stone-200/60 rounded-lg text-stone-800 text-xs focus:ring-2 focus:ring-[#707040]/10 outline-none"
+                                placeholder="1000"
+                              />
+                            </div>
+                          </div>
+
+                          {/* Discount Amount */}
+                          <div className="lg:col-span-3 space-y-1">
+                            <label className="text-[10px] uppercase tracking-widest font-bold text-stone-400 block">折抵金額 (Discount)</label>
+                            <div className="relative">
+                              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 text-xs">$</span>
+                              <input
+                                type="number"
+                                value={rule.discountAmount ?? 0}
+                                onChange={(e) => {
+                                  const val = Math.max(0, parseInt(e.target.value) || 0);
+                                  const updated = [...(settings.coupon_rules || [])];
+                                  updated[idx] = { ...rule, discountAmount: val };
+                                  setSettings({ ...settings, coupon_rules: updated });
+                                }}
+                                className="w-full pl-7 pr-3 py-2 bg-stone-50 border border-stone-200/60 rounded-lg text-stone-800 text-xs focus:ring-2 focus:ring-[#707040]/10 outline-none"
+                                placeholder="100"
+                              />
+                            </div>
+                          </div>
+
+                          {/* Delete Button */}
+                          <div className="lg:col-span-2 flex justify-end pt-4 lg:pt-0">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const updated = (settings.coupon_rules || []).filter((_, i) => i !== idx);
+                                setSettings({ ...settings, coupon_rules: updated });
+                                toast.success('已移除該折扣規則');
+                              }}
+                              className="p-2.5 bg-red-50 hover:bg-red-100 text-red-500 rounded-xl transition duration-150"
+                              title="刪除此規則"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </section>
           </div>
         )}

@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback, use
 import toast from 'react-hot-toast';
 
 import { ProductOption } from './services/productService';
+import { getSettings, SiteSettings, DiscountRule } from './services/settingsService';
 
 export interface CartItem {
   id: string;
@@ -25,11 +26,37 @@ interface CartContextType {
   freeShippingThreshold: number;
   isFreeShipping: boolean;
   amountToFreeShipping: number;
+  appliedDiscountRule: DiscountRule | null;
+  discountAmount: number;
+  refreshSettings: () => Promise<void>;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [settings, setSettings] = useState<SiteSettings | null>(null);
+
+  const refreshSettings = useCallback(async () => {
+    try {
+      const s = await getSettings(true);
+      setSettings(s);
+    } catch (err) {
+      console.error('Failed to reload settings in CartContext:', err);
+    }
+  }, []);
+
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        const s = await getSettings();
+        setSettings(s);
+      } catch (err) {
+        console.error('Failed to load settings in CartContext:', err);
+      }
+    };
+    loadSettings();
+  }, []);
+
   const [items, setItems] = useState<CartItem[]>(() => {
     try {
       const savedCart = localStorage.getItem('cart');
@@ -173,8 +200,25 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const totalItems = validatedItems.reduce((sum, item) => sum + (item?.quantity || 0), 0);
   const subtotal = validatedItems.reduce((sum, item) => sum + ((item?.price || 0) * (item?.quantity || 0)), 0);
-  const isFreeShipping = subtotal >= freeShippingThreshold;
-  const amountToFreeShipping = Math.max(0, freeShippingThreshold - subtotal);
+  
+  // 1. 免運券開關設定：開啟後，當購物車總金額達免運門檻，即自動免運。
+  const isFreeShippingEnabled = settings ? settings.coupon_free_shipping_active !== false : true;
+  const isFreeShipping = isFreeShippingEnabled && (subtotal >= freeShippingThreshold);
+  const amountToFreeShipping = isFreeShippingEnabled ? Math.max(0, freeShippingThreshold - subtotal) : 0;
+
+  // 2. 滿額折抵規則計算 (最高門檻優先套用)
+  const appliedDiscountRule = useMemo(() => {
+    if (!settings?.coupon_rules || settings.coupon_rules.length === 0) return null;
+    const activeRules = settings.coupon_rules.filter(
+      r => r.isActive && r.type === 'threshold_discount' && subtotal >= r.threshold
+    );
+    if (activeRules.length === 0) return null;
+    
+    // 按門檻金額從大到小排序，優先套用滿足的最高門檻規則
+    return activeRules.sort((a, b) => b.threshold - a.threshold)[0];
+  }, [settings, subtotal]);
+
+  const discountAmount = appliedDiscountRule ? appliedDiscountRule.discountAmount : 0;
 
   // Memoize Context Value 確保子組件不會因為 Context 參考地址變更而觸發額外渲染
   const contextValue = useMemo(() => ({
@@ -187,7 +231,10 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     subtotal,
     freeShippingThreshold,
     isFreeShipping,
-    amountToFreeShipping
+    amountToFreeShipping,
+    appliedDiscountRule,
+    discountAmount,
+    refreshSettings
   }), [
     validatedItems,
     addToCart,
@@ -198,7 +245,10 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     subtotal,
     freeShippingThreshold,
     isFreeShipping,
-    amountToFreeShipping
+    amountToFreeShipping,
+    appliedDiscountRule,
+    discountAmount,
+    refreshSettings
   ]);
 
   return (

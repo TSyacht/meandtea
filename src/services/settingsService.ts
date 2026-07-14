@@ -110,6 +110,19 @@ export interface SiteSettings {
   // Social login button branding
   google_login_logo_url: string;
   line_login_logo_url: string;
+
+  // Coupon / Cart promotion settings
+  coupon_free_shipping_active?: boolean;
+  coupon_rules?: DiscountRule[];
+}
+
+export interface DiscountRule {
+  id: string;
+  type: string; // 'threshold_discount' | etc.
+  name: string;
+  isActive: boolean;
+  threshold: number;
+  discountAmount: number;
 }
 
 const DEFAULT_SETTINGS: SiteSettings = {
@@ -120,6 +133,17 @@ const DEFAULT_SETTINGS: SiteSettings = {
   sync_news_banner: false,
   news_layout: 'grid',
   news_image_url: 'https://picsum.photos/seed/news-banner/1920/1080',
+  coupon_free_shipping_active: true,
+  coupon_rules: [
+    {
+      id: 'rule-1',
+      type: 'threshold_discount',
+      name: '滿千折百優惠',
+      isActive: true,
+      threshold: 1000,
+      discountAmount: 100
+    }
+  ],
   philosophy: [
     { title: '高山茶園', desc: '來自海拔千米以上的純淨茶區，雲霧繚繞中孕育的天然茶香' },
     { title: '自然農法', desc: '堅持不使用農藥，與自然共生，保留茶葉最純粹的生命力' },

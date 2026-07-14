@@ -1323,21 +1323,6 @@ export const AdminBeginnerVillage: React.FC = () => {
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-[#707040] block">通關折扣優惠券代碼 (專屬優惠碼)</label>
-                <input
-                  type="text"
-                  value={config.ultimate.coupon}
-                  onChange={(e) => {
-                    setConfig({
-                      ...config,
-                      ultimate: { ...config.ultimate, coupon: e.target.value }
-                    });
-                  }}
-                  className="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 text-sm font-extrabold uppercase font-mono text-amber-600"
-                />
-              </div>
-
-              <div className="space-y-1.5">
                 <label className="text-xs font-bold text-[#707040] block">終極特別頁社群邀請詞 (全網社群分享標題宣傳)</label>
                 <textarea
                   value={config.ultimate.socialText}

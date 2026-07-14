@@ -20,7 +20,7 @@ const TAIWAN_REGIONS: Record<string, string[]> = {
 };
 
 export const Checkout: React.FC = () => {
-  const { items, subtotal, isFreeShipping, clearCart } = useCart();
+  const { items, subtotal, isFreeShipping, clearCart, appliedDiscountRule, discountAmount } = useCart();
   const { user, session } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -148,7 +148,7 @@ export const Checkout: React.FC = () => {
   }, [formData.shipping_method]);
 
   const shippingPrice = isFreeShipping ? 0 : 100;
-  const total = subtotal + shippingPrice;
+  const total = Math.max(0, subtotal + shippingPrice - discountAmount);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -204,6 +204,11 @@ export const Checkout: React.FC = () => {
         ? `${formData.is_same_as_buyer ? formData.city : formData.recipient_city}${formData.is_same_as_buyer ? formData.district : formData.recipient_district}${formData.is_same_as_buyer ? formData.address : formData.recipient_address}` 
         : null;
 
+      let finalNote = String(formData.note || '');
+      if (appliedDiscountRule) {
+        finalNote = `[已套用優惠: ${appliedDiscountRule.name} -${discountAmount}] ` + finalNote;
+      }
+
       const orderData = {
         user_id: user?.id || null,
         customer_name: String(formData.customer_name),
@@ -217,7 +222,7 @@ export const Checkout: React.FC = () => {
         payment_method: String(formData.payment_method),
         shipping_method: String(formData.shipping_method),
         bank_last_five: null, 
-        note: String(formData.note),
+        note: finalNote,
         recipient_name: String(formData.is_same_as_buyer ? formData.customer_name : formData.recipient_name),
         recipient_phone: String(formData.is_same_as_buyer ? formData.customer_phone : formData.recipient_phone),
         recipient_address: finalAddress,
@@ -615,18 +620,45 @@ export const Checkout: React.FC = () => {
                     <span>商品小計</span>
                     <span>NT$ {subtotal.toLocaleString()}</span>
                   </div>
+
+                  {appliedDiscountRule && (
+                    <div className="flex justify-between text-sm text-emerald-600 font-medium">
+                      <span className="flex items-center gap-1.5">
+                        <CheckCircle size={15} className="text-emerald-500 animate-pulse" />
+                        已套用優惠: {appliedDiscountRule.name}
+                      </span>
+                      <span>- NT$ {discountAmount.toLocaleString()}</span>
+                    </div>
+                  )}
+
                   <div className="flex justify-between text-sm text-stone-500">
                     <span>運費</span>
                     <span>{isFreeShipping ? '免運費' : `NT$ ${shippingPrice}`}</span>
                   </div>
+
                   {!isFreeShipping && (
                     <div className="bg-orange-50 p-3 rounded-xl flex items-center gap-2 text-orange-600 text-[10px] font-bold uppercase tracking-widest">
                       <AlertCircle size={14} />
                       還差 NT$ {(1000 - subtotal).toLocaleString()} 即可享免運！
                     </div>
                   )}
-                  <div className="flex justify-between pt-4 border-t border-stone-100">
-                    <span className="text-zen-wood font-bold">總計</span>
+
+                  {isFreeShipping && (
+                    <div className="bg-emerald-50 p-3 rounded-xl flex items-center gap-2 text-emerald-600 text-[10px] font-bold uppercase tracking-widest">
+                      <CheckCircle size={14} />
+                      已套用免運券優惠！
+                    </div>
+                  )}
+
+                  <div className="flex justify-between pt-4 border-t border-stone-100 items-baseline">
+                    <div>
+                      <span className="text-zen-wood font-bold text-sm block">總計</span>
+                      {appliedDiscountRule && (
+                        <span className="text-[10px] text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded-full inline-block mt-1">
+                          本筆訂單已套用滿額折抵
+                        </span>
+                      )}
+                    </div>
                     <span className="text-2xl font-serif italic text-zen-wood">NT$ {total.toLocaleString()}</span>
                   </div>
                 </div>
