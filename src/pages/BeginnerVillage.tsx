@@ -139,7 +139,162 @@ const UltimateMedia: React.FC<{ imageUrl?: string; videoUrl?: string; forceUnmut
   );
 };
 
+export interface SavedStageResult {
+  stageId: string;
+  title: string;
+  image: string;
+  score: number;
+  description: string;
+}
+
+export interface TeaCatType {
+  id: string;
+  name: string;
+  image: string;
+  description: string;
+  personalityTrait: string;
+}
+
+export const TEA_CAT_TYPES: TeaCatType[] = [
+  {
+    id: 'black_cat',
+    name: '文青炭香黑貓',
+    image: 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=600&h=600&q=80',
+    description: '愛好靜謐與深度思考，最愛在微雨的午後泡一杯暖和的深焙黑茶，享受安靜的閱讀與白噪音時光。',
+    personalityTrait: '深沉冷靜、善於傾聽與觀照內心'
+  },
+  {
+    id: 'spring_water_cat',
+    name: '柔韻清泉水貓',
+    image: 'https://images.unsplash.com/photo-1533738363-b7f9aef128ce?auto=format&fit=crop&w=600&h=600&q=80',
+    description: '情感細膩溫柔，如清晨流經山石的澄澈清泉。喜愛在潺潺溪畔放鬆，與甘甜的冷泡綠茶有著天生的絕佳默契。',
+    personalityTrait: '溫柔體貼、感知細膩與喜愛和諧'
+  },
+  {
+    id: 'orange_cat',
+    name: '優雅微風橘貓',
+    image: 'https://images.unsplash.com/photo-1519052537078-e6302a4968d4?auto=format&fit=crop&w=600&h=600&q=80',
+    description: '品位高雅，熱愛山居生活美學與品茗儀式感。在茶香與精緻器皿間體悟微小的幸福，最愛香氣高雅、如風般輕盈的野放白茶。',
+    personalityTrait: '優雅從容、注重生活儀式感與美學'
+  },
+  {
+    id: 'tabby_cat',
+    name: '活力暖陽小虎',
+    image: 'https://images.unsplash.com/photo-1573865526739-10659fec78a5?auto=format&fit=crop&w=600&h=600&q=80',
+    description: '熱情奔放，渾身充滿山野生命的元力！喜歡親近自然，與同伴分享喜悅，最契合厚實飽滿、烘焙甘甜的原生焙火烏龍。',
+    personalityTrait: '開朗樂觀、精力充沛與富有冒險精神'
+  },
+  {
+    id: 'calico_cat',
+    name: '靈性山野小花',
+    image: 'https://images.unsplash.com/photo-1513360309081-36f5e878fc11?auto=format&fit=crop&w=600&h=600&q=80',
+    description: '與大自然有著極深的靈性共鳴，是山林最忠實的守護者。聽得懂微風與落葉的對話，最懂得品鑑稀有奇特的台灣野生野放茶。',
+    personalityTrait: '靈性敏銳、與自然合一與熱愛探索'
+  }
+];
+
 export const BeginnerVillage: React.FC = () => {
+  const saveStageScoreToLocalStorage = (stageId: string, result: { title: string; image: string; score: number; description: string }) => {
+    try {
+      const existing = localStorage.getItem('miye_village_stage_score');
+      const scoreObj = existing ? JSON.parse(existing) : {};
+      scoreObj[stageId] = result;
+      localStorage.setItem('miye_village_stage_score', JSON.stringify(scoreObj));
+    } catch (e) {
+      console.error('Failed to save stage score to localStorage', e);
+    }
+  };
+
+  const getStageSummaryData = () => {
+    let savedScores: Record<string, { score: number; title: string; image: string; description: string }> = {};
+    try {
+      const existing = localStorage.getItem('miye_village_stage_score');
+      if (existing) {
+        savedScores = JSON.parse(existing);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+
+    const defaultStages = [
+      {
+        id: 'personality',
+        name: '尋茶人格',
+        title: '堅韌大安水蓑衣型',
+        image: 'https://images.unsplash.com/photo-1545241047-6083a3684587?auto=format&fit=crop&w=400&q=80',
+        score: 6,
+        description: '默默紮根、滋養周遭，在冷靜中展現無窮的堅韌生命力。'
+      },
+      {
+        id: 'zodiac',
+        name: '星座茶緣',
+        title: '烈焰焙火黑茶 (火象星緣)',
+        image: 'https://images.unsplash.com/photo-1544787219-7f47ccb76574?auto=format&fit=crop&w=400&q=80',
+        score: 4,
+        description: '熱情奔放如烈火，適合溫潤醇厚的焙火茶，溫暖身心。'
+      },
+      {
+        id: 'energy',
+        name: '今日能量值',
+        title: '夏日正午朝陽 (能量 95%)',
+        image: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=400&q=80',
+        score: 3,
+        description: '充沛的生命元力，與大自然萬物熱烈共生，充滿正能量。'
+      },
+      {
+        id: 'lifestyle',
+        name: '生活風格',
+        title: '細微美學典雅型',
+        image: 'https://images.unsplash.com/photo-1513542789411-b6a5d4f31634?auto=format&fit=crop&w=400&q=80',
+        score: 3,
+        description: '在茶與器、心意交織間品讀幸福，講究生活中的每一處精緻細節。'
+      },
+      {
+        id: 'sensory',
+        name: '感官密碼',
+        title: '嗅覺與純郁味覺品茶師',
+        image: 'https://images.unsplash.com/photo-1576092768241-dec231879fc3?auto=format&fit=crop&w=400&q=80',
+        score: 3,
+        description: '對茶香與大自然的芬芳極具天賦，一呼一吸間解密山林的美好。'
+      }
+    ];
+
+    return defaultStages.map(def => {
+      const saved = savedScores[def.id];
+      if (saved) {
+        return {
+          id: def.id,
+          name: def.name,
+          title: saved.title || def.title,
+          image: saved.image || def.image,
+          score: saved.score !== undefined ? saved.score : def.score,
+          description: saved.description || def.description
+        };
+      }
+      return def;
+    });
+  };
+
+  const getMatchedTeaCatType = (stagesData: { id: string; name: string; title: string; image: string; score: number; description: string }[]) => {
+    const totalScore = stagesData.reduce((acc, stage) => {
+      let score = stage.score;
+      if (stage.id === 'zodiac') {
+        if (stage.title.includes('火')) score = 4;
+        else if (stage.title.includes('土')) score = 3;
+        else if (stage.title.includes('風')) score = 2;
+        else if (stage.title.includes('水')) score = 1;
+        else score = 2;
+      }
+      return acc + score;
+    }, 0);
+
+    if (totalScore <= 9) return TEA_CAT_TYPES[0];
+    if (totalScore <= 13) return TEA_CAT_TYPES[1];
+    if (totalScore <= 17) return TEA_CAT_TYPES[2];
+    if (totalScore <= 21) return TEA_CAT_TYPES[3];
+    return TEA_CAT_TYPES[4];
+  };
+
   const [loading, setLoading] = useState(true);
   const [config, setConfig] = useState<BeginnerVillageConfig | null>(null);
   const [completedStages, setCompletedStages] = useState<string[]>([]);
@@ -286,6 +441,14 @@ export const BeginnerVillage: React.FC = () => {
         description: (matchedRange as any).description || ''
       });
 
+      // Save stage result details
+      saveStageScoreToLocalStorage(activeStageId, {
+        title: matchedRange.title,
+        image: matchedRange.image,
+        score: nextScore,
+        description: (matchedRange as any).description || ''
+      });
+
       // Save progress
       if (!completedStages.includes(activeStageId)) {
         const updated = [...completedStages, activeStageId];
@@ -313,6 +476,14 @@ export const BeginnerVillage: React.FC = () => {
       title: match.title,
       image: match.image,
       socialText: match.socialText,
+      description: match.description || ''
+    });
+
+    // Save stage result details
+    saveStageScoreToLocalStorage('zodiac', {
+      title: match.title,
+      image: match.image,
+      score: 0, // Zodiac stage is choice based, default score offset
       description: match.description || ''
     });
 
@@ -645,6 +816,119 @@ export const BeginnerVillage: React.FC = () => {
                     )}
                   </div>
                 </div>
+
+                {/* 2. RESULT SUMMARY CONTAINER AREA */}
+                {(() => {
+                  const stagesData = getStageSummaryData();
+                  const matchedCat = getMatchedTeaCatType(stagesData);
+
+                  return (
+                    <div id="result-summary-container" className="space-y-8 text-left max-w-md mx-auto pt-6 border-t border-stone-100">
+                      {/* 1. TEA CAT TYPE DEEP MATCH */}
+                      <div className="bg-gradient-to-br from-[#FDFBF7] to-[#FAF6EE] p-6 rounded-3xl border border-[#707040]/15 shadow-sm space-y-5">
+                        <div className="flex items-center gap-2">
+                          <span className="w-1.5 h-6 bg-[#707040] rounded-full inline-block"></span>
+                          <span className="text-[10px] uppercase tracking-widest font-extrabold text-[#707040] font-mono">
+                            Tea Cat DNA Match
+                          </span>
+                        </div>
+
+                        <div className="flex flex-col sm:flex-row items-center gap-5">
+                          <div className="relative shrink-0 w-24 h-24 sm:w-28 sm:h-28 rounded-full overflow-hidden border-4 border-white shadow-md">
+                            <img 
+                              src={matchedCat.image} 
+                              alt={matchedCat.name}
+                              className="w-full h-full object-cover"
+                              referrerPolicy="no-referrer"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
+                          </div>
+
+                          <div className="space-y-2 text-center sm:text-left flex-1">
+                            <span className="text-[10px] font-extrabold tracking-widest text-[#E39B24] uppercase bg-[#E39B24]/10 px-2.5 py-0.5 rounded-full select-none">
+                              專屬茶貓配對
+                            </span>
+                            <h3 className="text-xl font-serif font-bold text-stone-800">
+                              {matchedCat.name}
+                            </h3>
+                            <p className="text-xs text-stone-500 font-medium font-sans">
+                              核心特質：<span className="text-[#707040] font-bold">{matchedCat.personalityTrait}</span>
+                            </p>
+                          </div>
+                        </div>
+
+                        <p className="text-xs text-stone-600 leading-relaxed font-light border-t border-stone-100/80 pt-3">
+                          {matchedCat.description}
+                        </p>
+                      </div>
+
+                      {/* 2. THE FIVE STAGE RESULT CARDS */}
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <span className="w-1.5 h-4 bg-[#707040]/60 rounded-full inline-block"></span>
+                            <h4 className="text-xs font-bold text-stone-800 tracking-wider">五維尋茶關卡歷程</h4>
+                          </div>
+                          <span className="text-[10px] font-bold text-stone-400 font-mono">5 Dimensions</span>
+                        </div>
+
+                        <div className="grid grid-cols-1 gap-3.5">
+                          {stagesData.map((stage) => {
+                            const getStageIcon = (id: string) => {
+                              switch (id) {
+                                case 'personality':
+                                  return <Heart size={14} className="text-rose-500" />;
+                                case 'zodiac':
+                                  return <Sparkles size={14} className="text-amber-500" />;
+                                case 'energy':
+                                  return <Activity size={14} className="text-emerald-500" />;
+                                case 'lifestyle':
+                                  return <Moon size={14} className="text-indigo-500" />;
+                                case 'sensory':
+                                  return <Eye size={14} className="text-purple-500" />;
+                                default:
+                                  return <CheckCircle2 size={14} className="text-[#707040]" />;
+                              }
+                            };
+
+                            return (
+                              <div 
+                                key={stage.id}
+                                className="bg-white/80 hover:bg-white p-4 rounded-2xl border border-stone-100 shadow-xs flex gap-4 transition-all duration-300 hover:shadow-sm"
+                                style={{ borderLeftWidth: '4px', borderLeftColor: '#707040' }}
+                              >
+                                <div className="shrink-0 w-12 h-12 rounded-xl overflow-hidden bg-stone-100 border border-stone-100">
+                                  <img 
+                                    src={stage.image} 
+                                    alt={stage.title} 
+                                    className="w-full h-full object-cover"
+                                    referrerPolicy="no-referrer"
+                                  />
+                                </div>
+                                <div className="space-y-1 flex-1 min-w-0">
+                                  <div className="flex items-center gap-1.5">
+                                    <span className="p-0.5 bg-stone-50 rounded-md inline-flex items-center justify-center">
+                                      {getStageIcon(stage.id)}
+                                    </span>
+                                    <span className="text-[10px] font-extrabold text-stone-400 tracking-wider uppercase font-sans">
+                                      {stage.name}
+                                    </span>
+                                  </div>
+                                  <h5 className="text-xs font-bold text-stone-800 truncate">
+                                    {stage.title}
+                                  </h5>
+                                  <p className="text-[10px] text-stone-500 font-light leading-relaxed line-clamp-1">
+                                    {stage.description}
+                                  </p>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
 
                 {/* Download and Share components */}
                 <div className="space-y-4 max-w-md mx-auto pt-2 border-t border-stone-100">
