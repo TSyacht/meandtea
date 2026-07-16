@@ -69,44 +69,51 @@ const ConfettiRain = () => {
   );
 };
 
-// Graduation media player with video autoplay & image poster/fallback mechanisms
-const GraduationMedia: React.FC<{ iconUrl?: string; videoUrl?: string }> = ({ iconUrl, videoUrl }) => {
+// Ultimate media player with video autoplay, loop, muted, playsinline & image poster/fallback mechanisms
+const UltimateMedia: React.FC<{ imageUrl?: string; videoUrl?: string }> = ({ imageUrl, videoUrl }) => {
   const [videoError, setVideoError] = useState(false);
+
+  const fallbackImage = imageUrl || 'https://images.unsplash.com/photo-1597481499750-3e6b22637e12?auto=format&fit=crop&w=1000&q=90';
 
   if (videoUrl && !videoError) {
     return (
       <video
         src={videoUrl}
-        poster={iconUrl}
+        poster={fallbackImage}
         autoPlay
         loop
         muted
         playsInline
         onError={() => setVideoError(true)}
-        className="w-full h-full object-cover rounded-2xl"
+        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-102 pointer-events-none select-none touch-none"
         style={{
-          borderRadius: '1rem',
-          WebkitBackfaceVisibility: 'hidden',
-          backfaceVisibility: 'hidden',
+          borderRadius: '2rem',
+          willChange: 'transform',
           transform: 'translateZ(0)',
+          backfaceVisibility: 'hidden',
+          WebkitBackfaceVisibility: 'hidden',
         }}
       />
     );
   }
 
-  if (iconUrl) {
-    return (
-      <img
-        src={iconUrl}
-        alt="graduation icon"
-        className="w-full h-full object-cover"
-        referrerPolicy="no-referrer"
-        onError={() => setVideoError(true)}
-      />
-    );
-  }
-
-  return <Award size={26} strokeWidth={1.2} className="animate-pulse" />;
+  return (
+    <img
+      src={fallbackImage}
+      alt="終極五維尋茶檔案"
+      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-102 pointer-events-none select-none touch-none"
+      style={{
+        borderRadius: '2rem',
+        willChange: 'transform',
+        transform: 'translateZ(0)',
+        backfaceVisibility: 'hidden',
+        WebkitBackfaceVisibility: 'hidden',
+      }}
+      referrerPolicy="no-referrer"
+      draggable="false"
+      onContextMenu={(e) => { e.preventDefault(); return false; }}
+    />
+  );
 };
 
 export const BeginnerVillage: React.FC = () => {
@@ -563,21 +570,7 @@ export const BeginnerVillage: React.FC = () => {
                       isolation: 'isolate',
                     }}
                   >
-                    <img
-                      src={config?.ultimate.image || 'https://images.unsplash.com/photo-1597481499750-3e6b22637e12?auto=format&fit=crop&w=1000&q=90'}
-                      alt="終極五維尋茶檔案"
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-102 pointer-events-none select-none touch-none"
-                      style={{
-                        borderRadius: '2rem',
-                        willChange: 'transform',
-                        transform: 'translateZ(0)',
-                        backfaceVisibility: 'hidden',
-                        WebkitBackfaceVisibility: 'hidden',
-                      }}
-                      referrerPolicy="no-referrer"
-                      draggable="false"
-                      onContextMenu={(e) => { e.preventDefault(); return false; }}
-                    />
+                    <UltimateMedia imageUrl={config?.ultimate.image} videoUrl={config?.ultimate.video} />
                   </div>
                 </div>
 
@@ -703,7 +696,11 @@ export const BeginnerVillage: React.FC = () => {
                       <div className="mt-4 p-5 bg-gradient-to-br from-[#FAF7F2] to-[#FAF7F2] rounded-2xl border-2 border-dashed border-[#707040]/30 shadow-sm relative overflow-hidden max-w-md mx-auto text-left animate-fadeIn">
                         <div className="relative flex items-center gap-4">
                           <div className="bg-[#707040]/5 rounded-2xl border border-[#707040]/10 text-[#707040] shrink-0 flex items-center justify-center w-14 h-14 overflow-hidden">
-                            <GraduationMedia iconUrl={config?.graduation_icon_url} videoUrl={config?.graduation_video_url} />
+                            {config?.graduation_icon_url ? (
+                              <img src={config.graduation_icon_url} alt="graduation icon" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                            ) : (
+                              <Award size={26} strokeWidth={1.2} className="animate-pulse" />
+                            )}
                           </div>
                           <div className="space-y-1 flex-1 pr-2">
                             <h4 className="text-[10px] font-bold tracking-widest text-[#707040]/70 uppercase">
@@ -984,7 +981,11 @@ export const BeginnerVillage: React.FC = () => {
                         <div className="mt-4 p-5 bg-gradient-to-br from-[#FAF7F2] to-[#FAF7F2] rounded-2xl border-2 border-dashed border-[#707040]/30 shadow-sm relative overflow-hidden max-w-md mx-auto text-left animate-fadeIn">
                           <div className="relative flex items-center gap-4">
                             <div className="bg-[#707040]/5 rounded-2xl border border-[#707040]/10 text-[#707040] shrink-0 flex items-center justify-center w-14 h-14 overflow-hidden">
-                              <GraduationMedia iconUrl={config?.graduation_icon_url} videoUrl={config?.graduation_video_url} />
+                              {config?.graduation_icon_url ? (
+                                <img src={config.graduation_icon_url} alt="graduation icon" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                              ) : (
+                                <Award size={26} strokeWidth={1.2} className="animate-pulse" />
+                              )}
                             </div>
                             <div className="space-y-1 flex-1 pr-2">
                               <h4 className="text-[10px] font-bold tracking-widest text-[#707040]/70 uppercase">

@@ -1304,23 +1304,60 @@ export const AdminBeginnerVillage: React.FC = () => {
             </div>
 
             <div className="space-y-5">
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-stone-700 block mb-1">完整五維尋茶檔案總圖卡上傳 (設計師預製圖片)</label>
-                <ImageUploader
-                  value={config.ultimate.image}
-                  onChange={(url) => {
-                    setConfig({
-                      ...config,
-                      ultimate: { ...config.ultimate, image: url }
-                    });
-                  }}
-                  label=""
-                  hint="建議上傳 1080 × 1920 像素 (9:16 比例) 高清直式圖，將自動上傳至 novice-village/grand-finale/ 資料夾"
-                  aspectRatio="aspect-[9/16] max-w-[240px]"
-                  bucket="novice-village"
-                  pathPrefix="grand-finale"
-                  customFileName="ultimate_result"
-                />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-stone-700 block mb-1">完整五維尋茶檔案總圖卡上傳 (設計師預製圖片)</label>
+                  <ImageUploader
+                    value={config.ultimate.image}
+                    onChange={(url) => {
+                      setConfig({
+                        ...config,
+                        ultimate: { ...config.ultimate, image: url }
+                      });
+                    }}
+                    label=""
+                    hint="建議上傳 1080 × 1920 像素 (9:16 比例) 高清直式圖，將自動上傳至 novice-village/grand-finale/ 資料夾，亦會自動作為影片未載入前的預覽圖 (Poster)。"
+                    aspectRatio="aspect-[9/16] max-w-[240px]"
+                    bucket="novice-village"
+                    pathPrefix="grand-finale"
+                    customFileName="ultimate_result"
+                  />
+                </div>
+
+                <div className="space-y-3">
+                  <label className="text-xs font-bold text-stone-700 block mb-1">完整五維尋茶檔案總影片上傳 (設計師預製影片)</label>
+                  <VideoUploader
+                    value={config.ultimate.video || ''}
+                    onChange={(url) => {
+                      setConfig({
+                        ...config,
+                        ultimate: { ...config.ultimate, video: url }
+                      });
+                    }}
+                    label=""
+                    hint="上傳經過 Web 最佳化壓縮的 9:16 直式 MP4 影片（檔案大小建議不超過 10MB），上傳後前台將優先以自動循環影片方式呈現，並使用上述圖片作為 Poster。"
+                    aspectRatio="aspect-[9/16] max-w-[240px]"
+                    bucket="novice-village"
+                    pathPrefix="grand-finale"
+                    customFileName="ultimate_result_video"
+                  />
+
+                  <div className="space-y-1.5 pt-2">
+                    <label className="text-[10px] uppercase tracking-widest font-bold text-stone-400 block">或手動設定影片網址 (Or manual video URL)</label>
+                    <input
+                      type="text"
+                      value={config.ultimate.video || ''}
+                      onChange={(e) => {
+                        setConfig({
+                          ...config,
+                          ultimate: { ...config.ultimate, video: e.target.value }
+                        });
+                      }}
+                      placeholder="例如：https://domain.com/my-video.mp4"
+                      className="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 text-xs font-medium text-stone-700"
+                    />
+                  </div>
+                </div>
               </div>
 
               <div className="space-y-1.5">
@@ -1423,42 +1460,6 @@ export const AdminBeginnerVillage: React.FC = () => {
                   pathPrefix="graduation"
                   customFileName="graduation_icon"
                 />
-              </div>
-
-              <div className="space-y-3">
-                <label className="text-xs font-bold text-stone-700 block mb-1">畢業禮卡片影片上傳 (Graduation Video Upload)</label>
-                <VideoUploader
-                  value={config.graduation_video_url || ''}
-                  onChange={(url) => {
-                    setConfig({
-                      ...config,
-                      graduation_video_url: url
-                    });
-                  }}
-                  label=""
-                  hint="請上傳經過 Web 最佳化壓縮的 MP4 格式影片（檔案大小建議不超過 10MB），這將優先取代前台的靜態 Icon 勳章圖示，並自動循環播放。"
-                  aspectRatio="aspect-video max-w-sm"
-                  bucket="novice-village"
-                  pathPrefix="graduation"
-                  customFileName="graduation_video"
-                />
-
-                <div className="space-y-1.5 pt-2">
-                  <label className="text-[10px] uppercase tracking-widest font-bold text-stone-400 block">或手動設定影片網址 (Or manual video URL)</label>
-                  <input
-                    type="text"
-                    value={config.graduation_video_url || ''}
-                    onChange={(e) => {
-                      setConfig({
-                        ...config,
-                        graduation_video_url: e.target.value
-                      });
-                    }}
-                    placeholder="例如：https://domain.com/my-video.mp4"
-                    className="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 text-xs font-medium text-stone-700"
-                  />
-                  <p className="text-[10px] text-stone-400 leading-normal">您亦可在此處直接貼上外部代管的影片 .mp4 直達連結網址。</p>
-                </div>
               </div>
 
               <div className="space-y-1.5">

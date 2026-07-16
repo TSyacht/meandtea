@@ -42,6 +42,7 @@ export interface VillageStage {
 
 export interface UltimateConfig {
   image: string;
+  video?: string;
   socialText: string;
 }
 
@@ -284,6 +285,7 @@ export const DEFAULT_VILLAGE_CONFIG: BeginnerVillageConfig = {
   ],
   ultimate: {
     image: 'https://images.unsplash.com/photo-1597481499750-3e6b22637e12?auto=format&fit=crop&w=1000&q=90',
+    video: '',
     socialText: '我已完整通過【覓野茶 · 新手村】五大探索考驗！獲得「終極五維尋茶檔案總圖卡」與專屬優惠，邀你開啟去中心化感官之旅，一同尋茶共覺！'
   }
 };
