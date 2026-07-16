@@ -499,29 +499,46 @@ export const BeginnerVillage: React.FC = () => {
               {/* dossier picture wrapper */}
               <div className="p-8 space-y-8">
                 <div 
-                  className="relative group max-w-[450px] mx-auto aspect-[9/16] bg-transparent rounded-[2rem] overflow-hidden shadow-lg border border-stone-200/40 pointer-events-none select-none touch-none"
+                  className="relative group max-w-[450px] mx-auto aspect-[9/16] bg-transparent pointer-events-none select-none touch-none shadow-lg"
                   style={{
+                    borderRadius: '2rem',
                     willChange: 'transform',
                     transform: 'translateZ(0)',
                     backfaceVisibility: 'hidden',
                     WebkitBackfaceVisibility: 'hidden',
+                    isolation: 'isolate',
                   }}
                   onContextMenu={(e) => { e.preventDefault(); return false; }}
                 >
-                  <img
-                    src={config?.ultimate.image || 'https://images.unsplash.com/photo-1597481499750-3e6b22637e12?auto=format&fit=crop&w=1000&q=90'}
-                    alt="終極五維尋茶檔案"
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-102 pointer-events-none select-none touch-none"
+                  <div
+                    className="absolute inset-0 w-full h-full overflow-hidden bg-transparent"
                     style={{
+                      borderRadius: '2rem',
+                      border: '0px',
+                      outline: 'none',
                       willChange: 'transform',
                       transform: 'translateZ(0)',
                       backfaceVisibility: 'hidden',
                       WebkitBackfaceVisibility: 'hidden',
+                      isolation: 'isolate',
                     }}
-                    referrerPolicy="no-referrer"
-                    draggable="false"
-                    onContextMenu={(e) => { e.preventDefault(); return false; }}
-                  />
+                  >
+                    <img
+                      src={config?.ultimate.image || 'https://images.unsplash.com/photo-1597481499750-3e6b22637e12?auto=format&fit=crop&w=1000&q=90'}
+                      alt="終極五維尋茶檔案"
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-102 pointer-events-none select-none touch-none"
+                      style={{
+                        borderRadius: '2rem',
+                        willChange: 'transform',
+                        transform: 'translateZ(0)',
+                        backfaceVisibility: 'hidden',
+                        WebkitBackfaceVisibility: 'hidden',
+                      }}
+                      referrerPolicy="no-referrer"
+                      draggable="false"
+                      onContextMenu={(e) => { e.preventDefault(); return false; }}
+                    />
+                  </div>
                 </div>
 
                 {/* Download and Share components */}
@@ -645,9 +662,9 @@ export const BeginnerVillage: React.FC = () => {
                     {completedStages.length >= 5 && (
                       <div className="mt-4 p-5 bg-gradient-to-br from-[#FAF7F2] to-[#FAF7F2] rounded-2xl border-2 border-dashed border-[#707040]/30 shadow-sm relative overflow-hidden max-w-md mx-auto text-left animate-fadeIn">
                         <div className="relative flex items-center gap-4">
-                          <div className="p-3 bg-[#707040]/5 rounded-2xl border border-[#707040]/10 text-[#707040] shrink-0 flex items-center justify-center w-14 h-14">
+                          <div className="bg-[#707040]/5 rounded-2xl border border-[#707040]/10 text-[#707040] shrink-0 flex items-center justify-center w-14 h-14 overflow-hidden">
                             {config?.graduation_icon_url ? (
-                              <img src={config.graduation_icon_url} alt="graduation icon" className="w-8 h-8 object-contain" referrerPolicy="no-referrer" />
+                              <img src={config.graduation_icon_url} alt="graduation icon" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                             ) : (
                               <Award size={26} strokeWidth={1.2} className="animate-pulse" />
                             )}
@@ -739,29 +756,46 @@ export const BeginnerVillage: React.FC = () => {
 
                   {/* ② 主視覺圖卡 */}
                   <div 
-                    className="relative group max-w-[450px] mx-auto aspect-[9/16] bg-transparent rounded-[2rem] overflow-hidden shadow-lg border border-stone-200/40 pointer-events-none select-none touch-none"
+                    className="relative group max-w-[450px] mx-auto aspect-[9/16] bg-transparent pointer-events-none select-none touch-none shadow-lg"
                     style={{
+                      borderRadius: '2rem',
                       willChange: 'transform',
                       transform: 'translateZ(0)',
                       backfaceVisibility: 'hidden',
                       WebkitBackfaceVisibility: 'hidden',
+                      isolation: 'isolate',
                     }}
                     onContextMenu={(e) => { e.preventDefault(); return false; }}
                   >
-                    <img
-                      src={stageResult.image}
-                      alt={stageResult.title}
-                      className="w-full h-full object-cover pointer-events-none select-none touch-none"
+                    <div
+                      className="absolute inset-0 w-full h-full overflow-hidden bg-transparent"
                       style={{
+                        borderRadius: '2rem',
+                        border: '0px',
+                        outline: 'none',
                         willChange: 'transform',
                         transform: 'translateZ(0)',
                         backfaceVisibility: 'hidden',
                         WebkitBackfaceVisibility: 'hidden',
+                        isolation: 'isolate',
                       }}
-                      referrerPolicy="no-referrer"
-                      draggable="false"
-                      onContextMenu={(e) => { e.preventDefault(); return false; }}
-                    />
+                    >
+                      <img
+                        src={stageResult.image}
+                        alt={stageResult.title}
+                        className="w-full h-full object-cover pointer-events-none select-none touch-none"
+                        style={{
+                          borderRadius: '2rem',
+                          willChange: 'transform',
+                          transform: 'translateZ(0)',
+                          backfaceVisibility: 'hidden',
+                          WebkitBackfaceVisibility: 'hidden',
+                        }}
+                        referrerPolicy="no-referrer"
+                        draggable="false"
+                        onContextMenu={(e) => { e.preventDefault(); return false; }}
+                      />
+                    </div>
                   </div>
 
                   {/* ③ 結果詳細文案 */}
@@ -913,9 +947,9 @@ export const BeginnerVillage: React.FC = () => {
                       {completedStages.length >= 5 && (
                         <div className="mt-4 p-5 bg-gradient-to-br from-[#FAF7F2] to-[#FAF7F2] rounded-2xl border-2 border-dashed border-[#707040]/30 shadow-sm relative overflow-hidden max-w-md mx-auto text-left animate-fadeIn">
                           <div className="relative flex items-center gap-4">
-                            <div className="p-3 bg-[#707040]/5 rounded-2xl border border-[#707040]/10 text-[#707040] shrink-0 flex items-center justify-center w-14 h-14">
+                            <div className="bg-[#707040]/5 rounded-2xl border border-[#707040]/10 text-[#707040] shrink-0 flex items-center justify-center w-14 h-14 overflow-hidden">
                               {config?.graduation_icon_url ? (
-                                <img src={config.graduation_icon_url} alt="graduation icon" className="w-8 h-8 object-contain" referrerPolicy="no-referrer" />
+                                <img src={config.graduation_icon_url} alt="graduation icon" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                               ) : (
                                 <Award size={26} strokeWidth={1.2} className="animate-pulse" />
                               )}
@@ -1116,33 +1150,31 @@ export const BeginnerVillage: React.FC = () => {
 
                 {completedStages.length > 0 && (
                   <div className="max-w-md mx-auto pt-3 space-y-4">
-                    <div className="flex items-center justify-between gap-4">
-                      <span className="text-xs font-semibold tracking-wider text-stone-600">
-                        探測度已完成：{completedStages.length * 20}%
-                      </span>
-                      {!showResetConfirm ? (
-                        <button
-                          onClick={() => setShowResetConfirm(true)}
-                          className="text-[10px] text-stone-400 border border-stone-200 hover:border-stone-400 hover:text-stone-600 px-2.5 py-1 rounded-xl transition-all font-semibold hover:bg-stone-50"
+                    <div className="flex items-center justify-center gap-4 text-center">
+                      {completedStages.length === 5 ? (
+                        <motion.span
+                          animate={{ 
+                            textShadow: [
+                              "0 0 4px rgba(112, 112, 64, 0.1)", 
+                              "0 0 14px rgba(212, 175, 55, 0.5)", 
+                              "0 0 4px rgba(112, 112, 64, 0.1)"
+                            ],
+                            scale: [1, 1.02, 1]
+                          }}
+                          transition={{ 
+                            duration: 2.5, 
+                            repeat: Infinity, 
+                            ease: "easeInOut" 
+                          }}
+                          className="text-lg md:text-xl font-extrabold tracking-widest text-[#D4AF37] drop-shadow-sm flex items-center justify-center gap-2"
                         >
-                          重新開始測驗
-                        </button>
+                          <Sparkles size={20} className="text-[#D4AF37] shrink-0 animate-bounce" />
+                          探測度已完成：100%
+                        </motion.span>
                       ) : (
-                        <div className="flex items-center gap-2 bg-amber-50/60 border border-amber-100 px-3 py-1.5 rounded-xl">
-                          <span className="text-[10px] text-amber-800 font-bold">確認清除所有前台作答進度？</span>
-                          <button
-                            onClick={handleRestartAll}
-                            className="text-[10px] bg-red-600 hover:bg-red-700 text-white px-2 py-0.5 rounded-lg font-bold transition-all"
-                          >
-                            確定重置
-                          </button>
-                          <button
-                            onClick={() => setShowResetConfirm(false)}
-                            className="text-[10px] bg-white text-stone-600 border border-stone-200 hover:bg-stone-50 px-2 py-0.5 rounded-lg font-medium transition-all"
-                          >
-                            取消
-                          </button>
-                        </div>
+                        <span className="text-xs font-semibold tracking-wider text-stone-600">
+                          探測度已完成：{completedStages.length * 20}%
+                        </span>
                       )}
                     </div>
                     
@@ -1156,11 +1188,42 @@ export const BeginnerVillage: React.FC = () => {
                               initial={false}
                               animate={{ width: isFilled ? '100%' : '0%' }}
                               transition={{ type: "spring", stiffness: 70, damping: 15, delay: i * 0.05 }}
-                              className="bg-[#707040] h-full rounded-full shadow-sm"
+                              className={`${completedStages.length === 5 ? 'bg-gradient-to-r from-[#707040] to-[#D4AF37]' : 'bg-[#707040]'} h-full rounded-full shadow-sm`}
                             />
                           </div>
                         );
                       })}
+                    </div>
+
+                    {/* 重新開始按鈕：放在進度條的正下方，寬度與進度條等寬 */}
+                    <div className="pt-2 w-full">
+                      {!showResetConfirm ? (
+                        <button
+                          onClick={() => setShowResetConfirm(true)}
+                          className="w-full text-center border-2 border-[#707040]/30 hover:border-[#707040] text-stone-600 hover:text-[#707040] px-4 py-2.5 rounded-xl transition-all font-bold text-xs bg-stone-50/50 hover:bg-[#707040]/5 tracking-widest shadow-sm flex items-center justify-center gap-2 uppercase"
+                        >
+                          <Compass size={14} className="shrink-0" />
+                          重新開始測驗 (Restart)
+                        </button>
+                      ) : (
+                        <div className="flex flex-col items-center gap-2 bg-amber-50/80 border border-amber-200 p-3 rounded-xl w-full">
+                          <span className="text-xs text-amber-800 font-bold">確認清除所有前台作答進度？</span>
+                          <div className="flex items-center gap-2 w-full">
+                            <button
+                              onClick={handleRestartAll}
+                              className="flex-1 bg-red-600 hover:bg-red-700 text-white py-1.5 px-3 rounded-lg font-bold text-xs transition-all shadow-sm"
+                            >
+                              確定重置
+                            </button>
+                            <button
+                              onClick={() => setShowResetConfirm(false)}
+                              className="flex-1 bg-white text-stone-600 border border-stone-200 hover:bg-stone-50 py-1.5 px-3 rounded-lg font-medium text-xs transition-all shadow-sm"
+                            >
+                              取消
+                            </button>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}
