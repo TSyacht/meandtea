@@ -111,7 +111,7 @@ const UltimateMedia: React.FC<{ imageUrl?: string; videoUrl?: string; forceUnmut
             e.preventDefault();
             setIsMuted(!isMuted);
           }}
-          className="absolute bottom-4 right-4 z-20 p-2.5 rounded-full bg-stone-950/60 hover:bg-stone-950/80 text-white backdrop-blur-md border border-white/20 transition-all active:scale-95 shadow-lg flex items-center justify-center cursor-pointer pointer-events-auto"
+          className="absolute bottom-4 left-4 z-20 p-2.5 rounded-full bg-stone-950/60 hover:bg-stone-950/80 text-white backdrop-blur-md border border-white/20 transition-all active:scale-95 shadow-lg flex items-center justify-center cursor-pointer pointer-events-auto"
           title={isMuted ? "播放聲音" : "靜音"}
         >
           {isMuted ? <VolumeX size={16} className="text-white animate-pulse" /> : <Volume2 size={16} className="text-white" />}
@@ -247,7 +247,6 @@ export const BeginnerVillage: React.FC = () => {
     if (userCompletedAllLevels) {
       // Intercept and redirect to completion page
       setShowUltimateScreen(true);
-      toast.error('您已完成測驗，系統保持在「結業狀態」。如欲重新挑戰，請先在完成頁面點擊「重新開始測驗」！');
       return;
     }
     // Reset stage state
@@ -544,7 +543,7 @@ export const BeginnerVillage: React.FC = () => {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0 }}
-              className="max-w-2xl mx-auto bg-white rounded-3xl text-center relative"
+              className="max-w-2xl mx-auto bg-white rounded-3xl text-center relative overflow-hidden"
               style={{
                 border: 'none',
                 outline: 'none',
@@ -552,10 +551,12 @@ export const BeginnerVillage: React.FC = () => {
                 backfaceVisibility: 'hidden',
                 WebkitBackfaceVisibility: 'hidden',
                 transform: 'translate3d(0, 0, 0)',
-                willChange: 'transform, opacity'
+                willChange: 'transform, opacity',
+                isolation: 'isolate',
+                WebkitMaskImage: '-webkit-radial-gradient(white, black)'
               }}
             >
-              <div className="bg-[#707040]/10 py-8 px-6 border-b border-[#707040]/10 relative">
+              <div className="bg-[#707040]/10 py-8 px-6 border-b border-[#707040]/10 relative rounded-t-3xl">
                 <button
                   onClick={() => setShowUltimateScreen(false)}
                   className="absolute right-6 top-6 text-stone-500 hover:text-stone-800 transition-colors p-1"
