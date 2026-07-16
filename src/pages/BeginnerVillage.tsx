@@ -22,7 +22,10 @@ import {
   Eye, 
   Heart, 
   Award,
-  BookOpen
+  BookOpen,
+  Volume2,
+  VolumeX,
+  Play
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { supabase, supabaseUrl } from '../db';
@@ -70,30 +73,50 @@ const ConfettiRain = () => {
 };
 
 // Ultimate media player with video autoplay, loop, muted, playsinline & image poster/fallback mechanisms
-const UltimateMedia: React.FC<{ imageUrl?: string; videoUrl?: string }> = ({ imageUrl, videoUrl }) => {
+const UltimateMedia: React.FC<{ imageUrl?: string; videoUrl?: string; forceUnmuted?: boolean }> = ({ imageUrl, videoUrl, forceUnmuted }) => {
   const [videoError, setVideoError] = useState(false);
+  const [isMuted, setIsMuted] = useState(!forceUnmuted);
+
+  useEffect(() => {
+    if (forceUnmuted) {
+      setIsMuted(false);
+    }
+  }, [forceUnmuted]);
 
   const fallbackImage = imageUrl || 'https://images.unsplash.com/photo-1597481499750-3e6b22637e12?auto=format&fit=crop&w=1000&q=90';
 
   if (videoUrl && !videoError) {
     return (
-      <video
-        src={videoUrl}
-        poster={fallbackImage}
-        autoPlay
-        loop
-        muted
-        playsInline
-        onError={() => setVideoError(true)}
-        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-102 pointer-events-none select-none touch-none"
-        style={{
-          borderRadius: '2rem',
-          willChange: 'transform',
-          transform: 'translateZ(0)',
-          backfaceVisibility: 'hidden',
-          WebkitBackfaceVisibility: 'hidden',
-        }}
-      />
+      <div className="relative w-full h-full">
+        <video
+          src={videoUrl}
+          poster={fallbackImage}
+          autoPlay
+          loop
+          muted={isMuted}
+          playsInline
+          onError={() => setVideoError(true)}
+          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-102 pointer-events-none select-none touch-none"
+          style={{
+            borderRadius: '2rem',
+            willChange: 'transform',
+            transform: 'translateZ(0)',
+            backfaceVisibility: 'hidden',
+            WebkitBackfaceVisibility: 'hidden',
+          }}
+        />
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            setIsMuted(!isMuted);
+          }}
+          className="absolute bottom-4 right-4 z-20 p-2.5 rounded-full bg-stone-950/60 hover:bg-stone-950/80 text-white backdrop-blur-md border border-white/20 transition-all active:scale-95 shadow-lg flex items-center justify-center cursor-pointer pointer-events-auto"
+          title={isMuted ? "播放聲音" : "靜音"}
+        >
+          {isMuted ? <VolumeX size={16} className="text-white animate-pulse" /> : <Volume2 size={16} className="text-white" />}
+        </button>
+      </div>
     );
   }
 
@@ -139,6 +162,7 @@ export const BeginnerVillage: React.FC = () => {
 
   // Ultimate Completion Screen State
   const [showUltimateScreen, setShowUltimateScreen] = useState(false);
+  const [hasBegunCeremony, setHasBegunCeremony] = useState(false);
   const [copiedCoupon, setCopiedCoupon] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
@@ -155,6 +179,12 @@ export const BeginnerVillage: React.FC = () => {
       behavior: 'smooth'
     });
   }, [activeStageId, currentQuestionIndex, stageResult, showUltimateScreen, inIntroScreen]);
+
+  useEffect(() => {
+    if (showUltimateScreen) {
+      setHasBegunCeremony(false);
+    }
+  }, [showUltimateScreen]);
 
   useEffect(() => {
     // Scroll to top
@@ -546,7 +576,7 @@ export const BeginnerVillage: React.FC = () => {
               {/* dossier picture wrapper */}
               <div className="p-8 space-y-8">
                 <div 
-                  className="relative group max-w-[450px] mx-auto aspect-[9/16] bg-transparent pointer-events-none select-none touch-none shadow-lg"
+                  className="relative group max-w-[450px] mx-auto aspect-[9/16] bg-transparent pointer-events-auto select-none touch-none shadow-lg"
                   style={{
                     borderRadius: '2rem',
                     willChange: 'transform',
@@ -570,7 +600,48 @@ export const BeginnerVillage: React.FC = () => {
                       isolation: 'isolate',
                     }}
                   >
-                    <UltimateMedia imageUrl={config?.ultimate.image} videoUrl={config?.ultimate.video} />
+                    {!hasBegunCeremony ? (
+                      <div className="absolute inset-0 w-full h-full bg-gradient-to-b from-[#1c1d15] via-[#24251b] to-[#12130e] flex flex-col items-center justify-between p-8 text-center select-none overflow-hidden relative border border-stone-800">
+                        {/* Ambient light glow */}
+                        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+                        
+                        <div className="my-auto space-y-6 relative z-10">
+                          {/* Sparkly / gold seal icon */}
+                          <div className="flex justify-center">
+                            <div className="relative">
+                              <div className="absolute -inset-2 rounded-full bg-amber-500/20 blur-lg animate-pulse" />
+                              <div className="relative bg-amber-500/10 border border-amber-500/30 rounded-full p-5 text-amber-500 shadow-inner flex items-center justify-center">
+                                <Sparkles size={40} className="animate-pulse text-[#E39B24]" />
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="space-y-2">
+                            <span className="text-[10px] uppercase tracking-widest font-bold text-amber-400 font-mono block">
+                              CEREMONY UNLOCK
+                            </span>
+                            <h2 className="text-xl font-bold text-amber-100 tracking-wider">
+                              尋茶啟程儀式
+                            </h2>
+                          </div>
+
+                          <p className="text-xs text-stone-300 leading-relaxed max-w-[280px] mx-auto font-medium">
+                            尋茶人，您已順利通過 5 大山林測驗！點擊下方「開啟儀式」解鎖您的終極五維尋茶檔案，並同步啟動專屬音效體驗。
+                          </p>
+                        </div>
+
+                        <div className="w-full max-w-xs mx-auto pb-4 relative z-10">
+                          <button
+                            onClick={() => setHasBegunCeremony(true)}
+                            className="w-full py-4 px-6 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-extrabold text-sm tracking-widest rounded-2xl transition-all shadow-lg shadow-amber-500/20 hover:shadow-amber-500/30 active:scale-95 animate-bounce flex items-center justify-center gap-2 cursor-pointer border border-amber-400/20"
+                          >
+                            <Play size={16} fill="currentColor" className="text-white" /> 進入開啟儀式
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <UltimateMedia imageUrl={config?.ultimate.image} videoUrl={config?.ultimate.video} forceUnmuted={true} />
+                    )}
                   </div>
                 </div>
 
