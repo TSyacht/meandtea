@@ -33,6 +33,7 @@ import {
 import { toast } from 'react-hot-toast';
 import { supabase, supabaseUrl } from '../../db';
 import { ImageUploader } from '../../components/admin/ImageUploader';
+import { VideoUploader } from '../../components/admin/VideoUploader';
 import { uploadImage } from '../../services/storageService';
 
 export const AdminBeginnerVillage: React.FC = () => {
@@ -1422,6 +1423,42 @@ export const AdminBeginnerVillage: React.FC = () => {
                   pathPrefix="graduation"
                   customFileName="graduation_icon"
                 />
+              </div>
+
+              <div className="space-y-3">
+                <label className="text-xs font-bold text-stone-700 block mb-1">畢業禮卡片影片上傳 (Graduation Video Upload)</label>
+                <VideoUploader
+                  value={config.graduation_video_url || ''}
+                  onChange={(url) => {
+                    setConfig({
+                      ...config,
+                      graduation_video_url: url
+                    });
+                  }}
+                  label=""
+                  hint="請上傳經過 Web 最佳化壓縮的 MP4 格式影片（檔案大小建議不超過 10MB），這將優先取代前台的靜態 Icon 勳章圖示，並自動循環播放。"
+                  aspectRatio="aspect-video max-w-sm"
+                  bucket="novice-village"
+                  pathPrefix="graduation"
+                  customFileName="graduation_video"
+                />
+
+                <div className="space-y-1.5 pt-2">
+                  <label className="text-[10px] uppercase tracking-widest font-bold text-stone-400 block">或手動設定影片網址 (Or manual video URL)</label>
+                  <input
+                    type="text"
+                    value={config.graduation_video_url || ''}
+                    onChange={(e) => {
+                      setConfig({
+                        ...config,
+                        graduation_video_url: e.target.value
+                      });
+                    }}
+                    placeholder="例如：https://domain.com/my-video.mp4"
+                    className="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 text-xs font-medium text-stone-700"
+                  />
+                  <p className="text-[10px] text-stone-400 leading-normal">您亦可在此處直接貼上外部代管的影片 .mp4 直達連結網址。</p>
+                </div>
               </div>
 
               <div className="space-y-1.5">

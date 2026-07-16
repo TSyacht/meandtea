@@ -69,6 +69,46 @@ const ConfettiRain = () => {
   );
 };
 
+// Graduation media player with video autoplay & image poster/fallback mechanisms
+const GraduationMedia: React.FC<{ iconUrl?: string; videoUrl?: string }> = ({ iconUrl, videoUrl }) => {
+  const [videoError, setVideoError] = useState(false);
+
+  if (videoUrl && !videoError) {
+    return (
+      <video
+        src={videoUrl}
+        poster={iconUrl}
+        autoPlay
+        loop
+        muted
+        playsInline
+        onError={() => setVideoError(true)}
+        className="w-full h-full object-cover rounded-2xl"
+        style={{
+          borderRadius: '1rem',
+          WebkitBackfaceVisibility: 'hidden',
+          backfaceVisibility: 'hidden',
+          transform: 'translateZ(0)',
+        }}
+      />
+    );
+  }
+
+  if (iconUrl) {
+    return (
+      <img
+        src={iconUrl}
+        alt="graduation icon"
+        className="w-full h-full object-cover"
+        referrerPolicy="no-referrer"
+        onError={() => setVideoError(true)}
+      />
+    );
+  }
+
+  return <Award size={26} strokeWidth={1.2} className="animate-pulse" />;
+};
+
 export const BeginnerVillage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [config, setConfig] = useState<BeginnerVillageConfig | null>(null);
@@ -663,11 +703,7 @@ export const BeginnerVillage: React.FC = () => {
                       <div className="mt-4 p-5 bg-gradient-to-br from-[#FAF7F2] to-[#FAF7F2] rounded-2xl border-2 border-dashed border-[#707040]/30 shadow-sm relative overflow-hidden max-w-md mx-auto text-left animate-fadeIn">
                         <div className="relative flex items-center gap-4">
                           <div className="bg-[#707040]/5 rounded-2xl border border-[#707040]/10 text-[#707040] shrink-0 flex items-center justify-center w-14 h-14 overflow-hidden">
-                            {config?.graduation_icon_url ? (
-                              <img src={config.graduation_icon_url} alt="graduation icon" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                            ) : (
-                              <Award size={26} strokeWidth={1.2} className="animate-pulse" />
-                            )}
+                            <GraduationMedia iconUrl={config?.graduation_icon_url} videoUrl={config?.graduation_video_url} />
                           </div>
                           <div className="space-y-1 flex-1 pr-2">
                             <h4 className="text-[10px] font-bold tracking-widest text-[#707040]/70 uppercase">
@@ -948,11 +984,7 @@ export const BeginnerVillage: React.FC = () => {
                         <div className="mt-4 p-5 bg-gradient-to-br from-[#FAF7F2] to-[#FAF7F2] rounded-2xl border-2 border-dashed border-[#707040]/30 shadow-sm relative overflow-hidden max-w-md mx-auto text-left animate-fadeIn">
                           <div className="relative flex items-center gap-4">
                             <div className="bg-[#707040]/5 rounded-2xl border border-[#707040]/10 text-[#707040] shrink-0 flex items-center justify-center w-14 h-14 overflow-hidden">
-                              {config?.graduation_icon_url ? (
-                                <img src={config.graduation_icon_url} alt="graduation icon" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                              ) : (
-                                <Award size={26} strokeWidth={1.2} className="animate-pulse" />
-                              )}
+                              <GraduationMedia iconUrl={config?.graduation_icon_url} videoUrl={config?.graduation_video_url} />
                             </div>
                             <div className="space-y-1 flex-1 pr-2">
                               <h4 className="text-[10px] font-bold tracking-widest text-[#707040]/70 uppercase">
