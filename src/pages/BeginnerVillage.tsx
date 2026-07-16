@@ -74,6 +74,7 @@ export const BeginnerVillage: React.FC = () => {
   const [config, setConfig] = useState<BeginnerVillageConfig | null>(null);
   const [completedStages, setCompletedStages] = useState<string[]>([]);
   const [activeStageId, setActiveStageId] = useState<string | null>(null);
+  const [userCompletedAllLevels, setUserCompletedAllLevels] = useState<boolean>(false);
   
   // Quiz specific states
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -124,6 +125,13 @@ export const BeginnerVillage: React.FC = () => {
       }
     };
 
+    // Load user_completed_all_levels
+    const completedAll = localStorage.getItem('user_completed_all_levels') === 'true';
+    if (completedAll) {
+      setUserCompletedAllLevels(true);
+      setShowUltimateScreen(true);
+    }
+
     // Load progress from localStorage
     const saved = localStorage.getItem('miye_village_completed');
     if (saved) {
@@ -131,11 +139,6 @@ export const BeginnerVillage: React.FC = () => {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed)) {
           setCompletedStages(parsed);
-          
-          // If all 5 stages were completed in a previous session, allow them to view map but trigger prompt
-          if (parsed.length >= 5) {
-            // Keep ultimate screen flag ready
-          }
         }
       } catch (e) {
         console.error(e);
@@ -148,6 +151,8 @@ export const BeginnerVillage: React.FC = () => {
   // Check if we meet the ultimate reward trigger on completing another stage
   const verifyOverallCompletion = (updatedCompleted: string[]) => {
     if (updatedCompleted.length >= 5) {
+      setUserCompletedAllLevels(true);
+      localStorage.setItem('user_completed_all_levels', 'true');
       setTimeout(() => {
         toast.success('恭喜你！解鎖完整五維尋茶檔案！', { duration: 5000, icon: '🎉' });
         setShowConfetti(true);
@@ -162,6 +167,12 @@ export const BeginnerVillage: React.FC = () => {
   const currentStage = config?.stages.find(s => s.id === activeStageId);
 
   const handleStageClick = (stageId: string) => {
+    if (userCompletedAllLevels) {
+      // Intercept and redirect to completion page
+      setShowUltimateScreen(true);
+      toast.error('您已完成測驗，系統保持在「結業狀態」。如欲重新挑戰，請先在完成頁面點擊「重新開始測驗」！');
+      return;
+    }
     // Reset stage state
     setActiveStageId(stageId);
     setCurrentQuestionIndex(0);
@@ -325,7 +336,9 @@ export const BeginnerVillage: React.FC = () => {
     setCompletedStages([]);
     localStorage.removeItem('miye_village_completed');
     localStorage.removeItem('miye_village_stage_score');
+    localStorage.removeItem('user_completed_all_levels');
     sessionStorage.removeItem('miye_village_completed');
+    setUserCompletedAllLevels(false);
     setStageResult(null);
     setShowUltimateScreen(false);
     setShowConfetti(false);
@@ -486,13 +499,25 @@ export const BeginnerVillage: React.FC = () => {
               {/* dossier picture wrapper */}
               <div className="p-8 space-y-8">
                 <div 
-                  className="relative group max-w-[450px] mx-auto aspect-[9/16] bg-stone-100 rounded-[2rem] overflow-hidden shadow-lg border border-stone-200/40 pointer-events-none select-none touch-none"
+                  className="relative group max-w-[450px] mx-auto aspect-[9/16] bg-transparent rounded-[2rem] overflow-hidden shadow-lg border border-stone-200/40 pointer-events-none select-none touch-none"
+                  style={{
+                    willChange: 'transform',
+                    transform: 'translateZ(0)',
+                    backfaceVisibility: 'hidden',
+                    WebkitBackfaceVisibility: 'hidden',
+                  }}
                   onContextMenu={(e) => { e.preventDefault(); return false; }}
                 >
                   <img
                     src={config?.ultimate.image || 'https://images.unsplash.com/photo-1597481499750-3e6b22637e12?auto=format&fit=crop&w=1000&q=90'}
                     alt="終極五維尋茶檔案"
-                    className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-102 pointer-events-none select-none touch-none"
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-102 pointer-events-none select-none touch-none"
+                    style={{
+                      willChange: 'transform',
+                      transform: 'translateZ(0)',
+                      backfaceVisibility: 'hidden',
+                      WebkitBackfaceVisibility: 'hidden',
+                    }}
                     referrerPolicy="no-referrer"
                     draggable="false"
                     onContextMenu={(e) => { e.preventDefault(); return false; }}
@@ -647,7 +672,17 @@ export const BeginnerVillage: React.FC = () => {
                     )}
                   </div>
 
-                  <div className="pt-6 border-t border-stone-100">
+                  <div className="pt-6 border-t border-stone-100 flex flex-col items-center gap-3">
+                    <button
+                      onClick={() => {
+                        if (window.confirm('確定要清除所有進度並重新開始測驗嗎？')) {
+                          handleRestartAll();
+                        }
+                      }}
+                      className="w-full max-w-xs bg-[#707040] hover:bg-[#5a5a31] text-white py-3 px-6 rounded-xl text-xs font-bold tracking-widest transition-all shadow-sm active:scale-97 flex items-center justify-center gap-2 uppercase"
+                    >
+                      重新開始測驗 (Restart)
+                    </button>
                     <button
                       onClick={() => setShowUltimateScreen(false)}
                       className="text-stone-500 hover:text-stone-800 text-xs font-semibold underline underline-offset-4 tracking-wider"
@@ -704,13 +739,25 @@ export const BeginnerVillage: React.FC = () => {
 
                   {/* ② 主視覺圖卡 */}
                   <div 
-                    className="relative group max-w-[450px] mx-auto aspect-[9/16] bg-stone-100 rounded-[2rem] overflow-hidden shadow-lg border border-stone-200/40 pointer-events-none select-none touch-none"
+                    className="relative group max-w-[450px] mx-auto aspect-[9/16] bg-transparent rounded-[2rem] overflow-hidden shadow-lg border border-stone-200/40 pointer-events-none select-none touch-none"
+                    style={{
+                      willChange: 'transform',
+                      transform: 'translateZ(0)',
+                      backfaceVisibility: 'hidden',
+                      WebkitBackfaceVisibility: 'hidden',
+                    }}
                     onContextMenu={(e) => { e.preventDefault(); return false; }}
                   >
                     <img
                       src={stageResult.image}
                       alt={stageResult.title}
-                      className="w-full h-full object-contain pointer-events-none select-none touch-none"
+                      className="w-full h-full object-cover pointer-events-none select-none touch-none"
+                      style={{
+                        willChange: 'transform',
+                        transform: 'translateZ(0)',
+                        backfaceVisibility: 'hidden',
+                        WebkitBackfaceVisibility: 'hidden',
+                      }}
                       referrerPolicy="no-referrer"
                       draggable="false"
                       onContextMenu={(e) => { e.preventDefault(); return false; }}
@@ -946,10 +993,11 @@ export const BeginnerVillage: React.FC = () => {
                   {/* 質感引導按鈕：踏上尋茶之旅 / 開始探索 */}
                   <div className="pt-6 border-t border-stone-100 flex flex-col items-center gap-4">
                     <motion.button
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
+                      whileHover={userCompletedAllLevels ? {} : { scale: 1.02 }}
+                      whileTap={userCompletedAllLevels ? {} : { scale: 0.98 }}
                       onClick={() => setInIntroScreen(false)}
-                      className="w-full max-w-sm bg-[#707040] hover:bg-[#5a5a31] text-white py-4 px-8 rounded-2xl text-xs md:text-sm font-extrabold tracking-widest transition-all shadow-md active:scale-97 flex items-center justify-center gap-2 uppercase"
+                      disabled={userCompletedAllLevels}
+                      className="w-full max-w-sm bg-[#707040] hover:bg-[#5a5a31] text-white py-4 px-8 rounded-2xl text-xs md:text-sm font-extrabold tracking-widest transition-all shadow-md active:scale-97 flex items-center justify-center gap-2 uppercase disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-[#707040]"
                     >
                       開始探索 <ChevronRight size={16} />
                     </motion.button>
@@ -974,8 +1022,9 @@ export const BeginnerVillage: React.FC = () => {
                     {listZodiacs.map(zodiac => (
                       <button
                         key={zodiac}
+                        disabled={userCompletedAllLevels}
                         onClick={() => handleZodiacSelect(zodiac)}
-                        className="bg-stone-50 hover:bg-[#707040] hover:text-white border border-stone-200/60 hover:border-[#707040] rounded-xl text-center py-3.5 transition-all text-sm font-medium tracking-wide active:scale-95 shadow-sm"
+                        className="bg-stone-50 hover:bg-[#707040] hover:text-white border border-stone-200/60 hover:border-[#707040] rounded-xl text-center py-3.5 transition-all text-sm font-medium tracking-wide active:scale-95 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-stone-50 disabled:hover:text-stone-800"
                       >
                         {zodiac}
                       </button>
@@ -1015,12 +1064,13 @@ export const BeginnerVillage: React.FC = () => {
                         {currentStage.questions[currentQuestionIndex].options.map((option, index) => (
                           <button
                             key={option.id}
+                            disabled={userCompletedAllLevels}
                             onClick={() => handleAnswerSubmit(
                               option.score, 
                               currentStage.questions[currentQuestionIndex].id, 
                               option.id
                             )}
-                            className="w-full text-left bg-stone-50/70 hover:bg-[#707040] hover:text-white border border-stone-200/50 hover:border-[#707040] rounded-2xl p-4 md:p-5 transition-all duration-200 shadow-sm flex items-center justify-between group"
+                            className="w-full text-left bg-stone-50/70 hover:bg-[#707040] hover:text-white border border-stone-200/50 hover:border-[#707040] rounded-2xl p-4 md:p-5 transition-all duration-200 shadow-sm flex items-center justify-between group disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-stone-50/70 disabled:hover:text-stone-800"
                           >
                             <span className="text-sm md:text-base font-semibold tracking-wide pr-4 leading-relaxed transition-colors">
                               {String.fromCharCode(65 + index)}. {option.text}
@@ -1147,12 +1197,24 @@ export const BeginnerVillage: React.FC = () => {
                             ${isPersonality ? 'w-full sm:max-w-md' : 'w-full'}
                             ${hasBgImage ? 'border-0 bg-transparent shadow-none' : `${node.bg} shadow-md`}
                           `}
+                          style={{
+                            willChange: 'transform',
+                            transform: 'translateZ(0)',
+                            backfaceVisibility: 'hidden',
+                            WebkitBackfaceVisibility: 'hidden',
+                          }}
                         >
                           {hasBgImage ? (
                             <img 
                               src={bgImage} 
                               alt={node.name} 
                               className="absolute inset-0 w-full h-full object-cover z-0 pointer-events-none rounded-3xl select-none"
+                              style={{
+                                willChange: 'transform',
+                                transform: 'translateZ(0)',
+                                backfaceVisibility: 'hidden',
+                                WebkitBackfaceVisibility: 'hidden',
+                              }}
                             />
                           ) : (
                             <div className="relative z-10 space-y-1.5 text-left w-full h-full flex flex-col justify-between p-5 pr-10">

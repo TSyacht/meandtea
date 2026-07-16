@@ -3,6 +3,8 @@ import toast from 'react-hot-toast';
 
 import { ProductOption } from './services/productService';
 import { getSettings, SiteSettings, DiscountRule } from './services/settingsService';
+import { useAuth } from './AuthContext';
+import { supabase } from './db';
 
 export interface CartItem {
   id: string;
@@ -29,12 +31,24 @@ interface CartContextType {
   appliedDiscountRule: DiscountRule | null;
   discountAmount: number;
   refreshSettings: () => Promise<void>;
+  appliedPromo: { code: string; name: string; discount: number; type: 'free_shipping' | 'discount' } | null;
+  applyPromoCode: (code: string) => Promise<{ success: boolean; message: string }>;
+  removePromoCode: () => void;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { user } = useAuth();
   const [settings, setSettings] = useState<SiteSettings | null>(null);
+  const [appliedPromo, setAppliedPromo] = useState<{ code: string; name: string; discount: number; type: 'free_shipping' | 'discount' } | null>(null);
+
+  // 當使用者未登入或登出時，自動清除手動套用的優惠券
+  useEffect(() => {
+    if (!user) {
+      setAppliedPromo(null);
+    }
+  }, [user]);
 
   const refreshSettings = useCallback(async () => {
     try {
@@ -195,30 +209,148 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const clearCart = useCallback(() => {
     setItems([]);
+    setAppliedPromo(null);
     localStorage.removeItem('cart');
   }, []);
 
   const totalItems = validatedItems.reduce((sum, item) => sum + (item?.quantity || 0), 0);
   const subtotal = validatedItems.reduce((sum, item) => sum + ((item?.price || 0) * (item?.quantity || 0)), 0);
   
-  // 1. 免運券開關設定：開啟後，當購物車總金額達免運門檻，即自動免運。
+  // 1. 免運券開關設定：開啟後，當購物車總金額達免運門檻，且為會員，即自動免運；或手動套用首購免運優惠券。
   const isFreeShippingEnabled = settings ? settings.coupon_free_shipping_active !== false : true;
-  const isFreeShipping = isFreeShippingEnabled && (subtotal >= freeShippingThreshold);
-  const amountToFreeShipping = isFreeShippingEnabled ? Math.max(0, freeShippingThreshold - subtotal) : 0;
+  const isFreeShipping = (!!user && isFreeShippingEnabled && (subtotal >= freeShippingThreshold)) || (appliedPromo?.type === 'free_shipping');
+  const amountToFreeShipping = isFreeShipping ? 0 : (isFreeShippingEnabled ? Math.max(0, freeShippingThreshold - subtotal) : 0);
 
-  // 2. 滿額折抵規則計算 (最高門檻優先套用)
+  // 2. 滿額折抵規則計算 (最高門檻優先套用，必須為會員，且排除需要手動輸入優惠代碼的規則)
   const appliedDiscountRule = useMemo(() => {
+    if (!user) return null;
     if (!settings?.coupon_rules || settings.coupon_rules.length === 0) return null;
     const activeRules = settings.coupon_rules.filter(
-      r => r.isActive && r.type === 'threshold_discount' && subtotal >= r.threshold
+      r => r.isActive && !r.code && r.type === 'threshold_discount' && subtotal >= r.threshold
     );
     if (activeRules.length === 0) return null;
     
     // 按門檻金額從大到小排序，優先套用滿足的最高門檻規則
     return activeRules.sort((a, b) => b.threshold - a.threshold)[0];
-  }, [settings, subtotal]);
+  }, [user, settings, subtotal]);
 
-  const discountAmount = appliedDiscountRule ? appliedDiscountRule.discountAmount : 0;
+  const discountAmount = (appliedDiscountRule ? appliedDiscountRule.discountAmount : 0) + (appliedPromo?.type === 'discount' ? appliedPromo.discount : 0);
+
+  // 3. 手動套用與驗證優惠代碼
+  const applyPromoCode = useCallback(async (code: string): Promise<{ success: boolean; message: string }> => {
+    // 強制登入限制：限制為『會員專屬』
+    if (!user) {
+      return { success: false, message: 'REQUIRES_LOGIN' };
+    }
+
+    const trimmedCode = code.trim();
+    if (!trimmedCode) {
+      return { success: false, message: '請輸入優惠碼' };
+    }
+
+    // 2. 首購免運券 (【覓野茶】)
+    const isFirstBuyCode = trimmedCode === '【覓野茶】' || trimmedCode === '覓野茶';
+    if (isFirstBuyCode) {
+      try {
+        // A. 歷史成功訂單筆數 >= 1
+        const { count, error } = await supabase
+          .from('orders')
+          .select('id', { count: 'exact', head: true })
+          .eq('user_id', user.id)
+          .not('status', 'eq', '已取消');
+
+        if (error) throw error;
+
+        if (count !== null && count >= 1) {
+          return { success: false, message: '此優惠僅限首次購買的會員使用' };
+        }
+
+        // B. 重複使用限制：檢查歷史訂單中的 note 欄位
+        const { data: pastOrders, error: noteError } = await supabase
+          .from('orders')
+          .select('note')
+          .eq('user_id', user.id)
+          .not('status', 'eq', '已取消');
+
+        if (noteError) throw noteError;
+
+        const hasUsed = pastOrders?.some(order => 
+          order.note && (
+            order.note.includes('[已套用優惠碼: 【覓野茶】]') || 
+            order.note.includes('[已套用優惠碼: 覓野茶]')
+          )
+        );
+
+        if (hasUsed) {
+          return { success: false, message: '使用過該優惠碼，無法重複使用' };
+        }
+
+        setAppliedPromo({
+          code: '【覓野茶】',
+          name: '首購免運優惠券',
+          discount: 100, // 抵扣運費 100 元
+          type: 'free_shipping'
+        });
+        
+        return { success: true, message: '已成功套用首購免運優惠！' };
+      } catch (err) {
+        console.error('Error verifying first-buy coupon:', err);
+        return { success: false, message: '驗證優惠碼時發生錯誤，請稍後再試' };
+      }
+    }
+
+    // 3. 滿額折抵規則優惠碼判定
+    if (settings?.coupon_rules && settings.coupon_rules.length > 0) {
+      const matchedRule = settings.coupon_rules.find(
+        r => r.isActive && r.code && r.code.trim().toUpperCase() === trimmedCode.toUpperCase()
+      );
+
+      if (matchedRule) {
+        if (subtotal < matchedRule.threshold) {
+          return { 
+            success: false, 
+            message: `此優惠碼需消費滿 NT$ ${matchedRule.threshold.toLocaleString()} 方可使用，目前還差 NT$ ${(matchedRule.threshold - subtotal).toLocaleString()}` 
+          };
+        }
+
+        try {
+          const { data: pastOrders, error: noteError } = await supabase
+            .from('orders')
+            .select('note')
+            .eq('user_id', user.id)
+            .not('status', 'eq', '已取消');
+
+          if (noteError) throw noteError;
+
+          const hasUsed = pastOrders?.some(order => 
+            order.note && order.note.includes(`[已套用優惠碼: ${matchedRule.code}]`)
+          );
+
+          if (hasUsed) {
+            return { success: false, message: '使用過該優惠碼，無法重複使用' };
+          }
+
+          setAppliedPromo({
+            code: matchedRule.code,
+            name: matchedRule.name,
+            discount: matchedRule.discountAmount,
+            type: 'discount'
+          });
+
+          return { success: true, message: `已成功套用「${matchedRule.name}」折抵 NT$ ${matchedRule.discountAmount}！` };
+        } catch (err) {
+          console.error('Error verifying custom coupon:', err);
+          return { success: false, message: '驗證優惠碼時發生錯誤，請稍後再試' };
+        }
+      }
+    }
+
+    return { success: false, message: '此優惠碼無效或已過期' };
+  }, [user, settings, subtotal]);
+
+  const removePromoCode = useCallback(() => {
+    setAppliedPromo(null);
+  }, []);
 
   // Memoize Context Value 確保子組件不會因為 Context 參考地址變更而觸發額外渲染
   const contextValue = useMemo(() => ({
@@ -234,7 +366,10 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     amountToFreeShipping,
     appliedDiscountRule,
     discountAmount,
-    refreshSettings
+    refreshSettings,
+    appliedPromo,
+    applyPromoCode,
+    removePromoCode
   }), [
     validatedItems,
     addToCart,
@@ -248,7 +383,10 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     amountToFreeShipping,
     appliedDiscountRule,
     discountAmount,
-    refreshSettings
+    refreshSettings,
+    appliedPromo,
+    applyPromoCode,
+    removePromoCode
   ]);
 
   return (

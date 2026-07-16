@@ -1802,6 +1802,7 @@ export const AdminSettings: React.FC = () => {
                     <p className="text-xs text-stone-400 mt-1">控制是否啟動免運優惠。開啟後，當購物車總金額達免運門檻（目前預設為 $1000），即自動免運。</p>
                   </div>
                   <button
+                    type="button"
                     onClick={() => {
                       setSettings({
                         ...settings,
@@ -1852,6 +1853,7 @@ export const AdminSettings: React.FC = () => {
                         id: 'rule-' + Date.now(),
                         type: 'threshold_discount',
                         name: '滿千折百優惠',
+                        code: '',
                         isActive: true,
                         threshold: 1000,
                         discountAmount: 100
@@ -1926,7 +1928,7 @@ export const AdminSettings: React.FC = () => {
                           </div>
 
                           {/* Threshold */}
-                          <div className="lg:col-span-3 space-y-1">
+                          <div className="lg:col-span-2 space-y-1">
                             <label className="text-[10px] uppercase tracking-widest font-bold text-stone-400 block">滿額門檻 (Threshold)</label>
                             <div className="relative">
                               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 text-xs">$</span>
@@ -1946,7 +1948,7 @@ export const AdminSettings: React.FC = () => {
                           </div>
 
                           {/* Discount Amount */}
-                          <div className="lg:col-span-3 space-y-1">
+                          <div className="lg:col-span-2 space-y-1">
                             <label className="text-[10px] uppercase tracking-widest font-bold text-stone-400 block">折抵金額 (Discount)</label>
                             <div className="relative">
                               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 text-xs">$</span>
@@ -1965,8 +1967,24 @@ export const AdminSettings: React.FC = () => {
                             </div>
                           </div>
 
+                          {/* Promo Code */}
+                          <div className="lg:col-span-3 space-y-1">
+                            <label className="text-[10px] uppercase tracking-widest font-bold text-stone-400 block">優惠專屬代碼 (選填)</label>
+                            <input
+                              type="text"
+                              value={rule.code || ''}
+                              onChange={(e) => {
+                                const updated = [...(settings.coupon_rules || [])];
+                                updated[idx] = { ...rule, code: e.target.value.trim() };
+                                setSettings({ ...settings, coupon_rules: updated });
+                              }}
+                              className="w-full px-3 py-2 bg-stone-50 border border-stone-200/60 rounded-lg text-stone-800 text-xs focus:ring-2 focus:ring-[#707040]/10 outline-none"
+                              placeholder="例：MIN100 (不填則自動套用)"
+                            />
+                          </div>
+
                           {/* Delete Button */}
-                          <div className="lg:col-span-2 flex justify-end pt-4 lg:pt-0">
+                          <div className="lg:col-span-1 flex justify-end pt-4 lg:pt-0">
                             <button
                               type="button"
                               onClick={() => {

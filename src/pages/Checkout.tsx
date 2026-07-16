@@ -20,10 +20,23 @@ const TAIWAN_REGIONS: Record<string, string[]> = {
 };
 
 export const Checkout: React.FC = () => {
-  const { items, subtotal, isFreeShipping, clearCart, appliedDiscountRule, discountAmount } = useCart();
+  const { 
+    items, 
+    subtotal, 
+    isFreeShipping, 
+    clearCart, 
+    appliedDiscountRule, 
+    discountAmount, 
+    appliedPromo, 
+    applyPromoCode, 
+    removePromoCode,
+    freeShippingThreshold
+  } = useCart();
   const { user, session } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [promoCodeInput, setPromoCodeInput] = useState('');
+  const [promoLoading, setPromoLoading] = useState(false);
 
   const [formData, setFormData] = useState({
     customer_name: '',
@@ -150,6 +163,39 @@ export const Checkout: React.FC = () => {
   const shippingPrice = isFreeShipping ? 0 : 100;
   const total = Math.max(0, subtotal + shippingPrice - discountAmount);
 
+  const handleApplyPromo = async () => {
+    if (!user) {
+      toast.error('此優惠碼為會員專屬，請先登入會員。');
+      navigate('/login');
+      return;
+    }
+    if (!promoCodeInput.trim()) {
+      toast.error('請輸入優惠碼');
+      return;
+    }
+
+    setPromoLoading(true);
+    try {
+      const res = await applyPromoCode(promoCodeInput.trim());
+      if (res.success) {
+        toast.success(res.message);
+        setPromoCodeInput('');
+      } else {
+        if (res.message === 'REQUIRES_LOGIN') {
+          toast.error('此優惠碼為會員專屬，請先登入會員。');
+          navigate('/login');
+        } else {
+          toast.error(res.message);
+        }
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error('套用優惠碼時發生錯誤');
+    } finally {
+      setPromoLoading(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -205,8 +251,11 @@ export const Checkout: React.FC = () => {
         : null;
 
       let finalNote = String(formData.note || '');
+      if (appliedPromo) {
+        finalNote = `[已套用優惠碼: ${appliedPromo.code}] [已套用優惠: ${appliedPromo.name} -${appliedPromo.discount}] ` + finalNote;
+      }
       if (appliedDiscountRule) {
-        finalNote = `[已套用優惠: ${appliedDiscountRule.name} -${discountAmount}] ` + finalNote;
+        finalNote = `[已套用優惠: ${appliedDiscountRule.name} -${appliedDiscountRule.discountAmount}] ` + finalNote;
       }
 
       const orderData = {
@@ -615,21 +664,69 @@ export const Checkout: React.FC = () => {
                   })}
                 </div>
                 
-                <div className="space-y-4 pt-8 border-t border-stone-100">
+                {/* 優惠碼輸入區 */}
+                <div className="py-6 border-t border-b border-stone-100 my-6 space-y-3 text-left">
+                  <div className="flex gap-3">
+                    <input
+                      type="text"
+                      placeholder="請輸入優惠碼 (例: 【覓野茶】)"
+                      value={promoCodeInput}
+                      onChange={(e) => setPromoCodeInput(e.target.value)}
+                      disabled={promoLoading || !!appliedPromo}
+                      className="flex-1 px-4 py-3 bg-stone-50 border border-stone-200/60 rounded-xl focus:ring-2 focus:ring-zen-green/20 outline-none text-xs text-stone-800 disabled:bg-stone-100 disabled:text-stone-400"
+                    />
+                    {appliedPromo ? (
+                      <button
+                        type="button"
+                        onClick={removePromoCode}
+                        className="px-4 py-3 bg-red-50 hover:bg-red-100 text-red-500 rounded-xl text-xs font-bold transition duration-150"
+                      >
+                        取消
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={handleApplyPromo}
+                        disabled={promoLoading}
+                        className="px-5 py-3 bg-[#707040] hover:bg-[#5a5a33] text-white rounded-xl text-xs font-bold transition duration-150 disabled:opacity-50"
+                      >
+                        {promoLoading ? '套用中...' : '套用'}
+                      </button>
+                    )}
+                  </div>
+                  {appliedPromo && (
+                    <p className="text-xs text-emerald-600 font-bold flex items-center gap-1.5 pl-1">
+                      <CheckCircle size={14} className="text-emerald-500 animate-pulse" />
+                      已套用: {appliedPromo.name} {appliedPromo.type === 'free_shipping' ? '(免運費)' : `(- NT$ ${appliedPromo.discount})`}
+                    </p>
+                  )}
+                </div>
+                
+                <div className="space-y-4 pt-4">
                   <div className="flex justify-between text-sm text-stone-500">
                     <span>商品小計</span>
                     <span>NT$ {subtotal.toLocaleString()}</span>
                   </div>
+ 
+                   {appliedDiscountRule && (
+                     <div className="flex justify-between text-sm text-emerald-600 font-medium">
+                       <span className="flex items-center gap-1.5">
+                         <CheckCircle size={15} className="text-emerald-500" />
+                         已套用優惠: {appliedDiscountRule.name}
+                       </span>
+                       <span>- NT$ {appliedDiscountRule.discountAmount.toLocaleString()}</span>
+                     </div>
+                   )}
 
-                  {appliedDiscountRule && (
-                    <div className="flex justify-between text-sm text-emerald-600 font-medium">
-                      <span className="flex items-center gap-1.5">
-                        <CheckCircle size={15} className="text-emerald-500 animate-pulse" />
-                        已套用優惠: {appliedDiscountRule.name}
-                      </span>
-                      <span>- NT$ {discountAmount.toLocaleString()}</span>
-                    </div>
-                  )}
+                   {appliedPromo && appliedPromo.type === 'discount' && (
+                     <div className="flex justify-between text-sm text-emerald-600 font-medium">
+                       <span className="flex items-center gap-1.5">
+                         <CheckCircle size={15} className="text-emerald-500" />
+                         已套用優惠碼: {appliedPromo.code} ({appliedPromo.name})
+                       </span>
+                       <span>- NT$ {appliedPromo.discount.toLocaleString()}</span>
+                     </div>
+                   )}
 
                   <div className="flex justify-between text-sm text-stone-500">
                     <span>運費</span>
@@ -639,7 +736,7 @@ export const Checkout: React.FC = () => {
                   {!isFreeShipping && (
                     <div className="bg-orange-50 p-3 rounded-xl flex items-center gap-2 text-orange-600 text-[10px] font-bold uppercase tracking-widest">
                       <AlertCircle size={14} />
-                      還差 NT$ {(1000 - subtotal).toLocaleString()} 即可享免運！
+                      還差 NT$ {(freeShippingThreshold - subtotal).toLocaleString()} 即可享免運！
                     </div>
                   )}
 

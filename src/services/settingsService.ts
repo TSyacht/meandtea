@@ -120,6 +120,7 @@ export interface DiscountRule {
   id: string;
   type: string; // 'threshold_discount' | etc.
   name: string;
+  code?: string;
   isActive: boolean;
   threshold: number;
   discountAmount: number;
