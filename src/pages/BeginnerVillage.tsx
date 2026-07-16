@@ -275,24 +275,68 @@ export const BeginnerVillage: React.FC = () => {
     });
   };
 
-  const getMatchedTeaCatType = (stagesData: { id: string; name: string; title: string; image: string; score: number; description: string }[]) => {
-    const totalScore = stagesData.reduce((acc, stage) => {
-      let score = stage.score;
-      if (stage.id === 'zodiac') {
-        if (stage.title.includes('火')) score = 4;
-        else if (stage.title.includes('土')) score = 3;
-        else if (stage.title.includes('風')) score = 2;
-        else if (stage.title.includes('水')) score = 1;
-        else score = 2;
-      }
-      return acc + score;
-    }, 0);
+  const getMatchedTeaCats = (stagesData: { id: string; name: string; title: string; image: string; score: number; description: string }[]) => {
+    const votes: Record<string, number> = {
+      black_cat: 0,
+      spring_water_cat: 0,
+      orange_cat: 0,
+      tabby_cat: 0,
+      calico_cat: 0
+    };
 
-    if (totalScore <= 9) return TEA_CAT_TYPES[0];
-    if (totalScore <= 13) return TEA_CAT_TYPES[1];
-    if (totalScore <= 17) return TEA_CAT_TYPES[2];
-    if (totalScore <= 21) return TEA_CAT_TYPES[3];
-    return TEA_CAT_TYPES[4];
+    stagesData.forEach(stage => {
+      const score = stage.score;
+      if (stage.id === 'personality') {
+        if (score <= 3) votes.black_cat += 1;
+        else if (score <= 5) votes.spring_water_cat += 1;
+        else if (score <= 7) votes.orange_cat += 1;
+        else if (score <= 9) votes.tabby_cat += 1;
+        else votes.calico_cat += 1;
+      } else if (stage.id === 'zodiac') {
+        const title = stage.title || '';
+        if (title.includes('火') || title.includes('牡羊') || title.includes('獅子') || title.includes('射手') || title.includes('烈焰')) {
+          votes.tabby_cat += 1;
+        } else if (title.includes('水') || title.includes('雙魚') || title.includes('巨蟹') || title.includes('天蠍') || title.includes('清泉')) {
+          votes.spring_water_cat += 1;
+        } else if (title.includes('土') || title.includes('金牛') || title.includes('處女') || title.includes('摩羯') || title.includes('炭香')) {
+          votes.black_cat += 1;
+        } else if (title.includes('風') || title.includes('雙子') || title.includes('天秤') || title.includes('水瓶') || title.includes('微風')) {
+          votes.orange_cat += 1;
+        } else {
+          votes.calico_cat += 1;
+        }
+      } else if (stage.id === 'energy') {
+        if (score <= 2) votes.black_cat += 1;
+        else if (score <= 4) votes.spring_water_cat += 1;
+        else if (score <= 6) votes.orange_cat += 1;
+        else if (score <= 8) votes.tabby_cat += 1;
+        else votes.calico_cat += 1;
+      } else if (stage.id === 'lifestyle') {
+        if (score <= 2) votes.black_cat += 1;
+        else if (score <= 4) votes.spring_water_cat += 1;
+        else if (score <= 6) votes.orange_cat += 1;
+        else if (score <= 8) votes.tabby_cat += 1;
+        else votes.calico_cat += 1;
+      } else if (stage.id === 'sensory') {
+        if (score <= 2) votes.black_cat += 1;
+        else if (score <= 4) votes.spring_water_cat += 1;
+        else if (score <= 6) votes.orange_cat += 1;
+        else if (score <= 8) votes.tabby_cat += 1;
+        else votes.calico_cat += 1;
+      }
+    });
+
+    let maxVotes = 0;
+    Object.values(votes).forEach(v => {
+      if (v > maxVotes) maxVotes = v;
+    });
+
+    if (maxVotes === 0) {
+      return [TEA_CAT_TYPES[0]];
+    }
+
+    const matchedKeys = Object.keys(votes).filter(k => votes[k] === maxVotes);
+    return matchedKeys.map(key => TEA_CAT_TYPES.find(c => c.id === key)!).filter(Boolean);
   };
 
   const [loading, setLoading] = useState(true);
@@ -820,50 +864,48 @@ export const BeginnerVillage: React.FC = () => {
                 {/* 2. RESULT SUMMARY CONTAINER AREA */}
                 {(() => {
                   const stagesData = getStageSummaryData();
-                  const matchedCat = getMatchedTeaCatType(stagesData);
+                  const matchedCats = getMatchedTeaCats(stagesData);
+                  const catNamesStr = matchedCats.map(c => c.name).join(' 和 ');
 
                   return (
-                    <div id="result-summary-container" className="space-y-8 text-left max-w-md mx-auto pt-6 border-t border-stone-100">
-                      {/* 1. TEA CAT TYPE DEEP MATCH */}
-                      <div className="bg-gradient-to-br from-[#FDFBF7] to-[#FAF6EE] p-6 rounded-3xl border border-[#707040]/15 shadow-sm space-y-5">
-                        <div className="flex items-center gap-2">
-                          <span className="w-1.5 h-6 bg-[#707040] rounded-full inline-block"></span>
-                          <span className="text-[10px] uppercase tracking-widest font-extrabold text-[#707040] font-mono">
-                            Tea Cat DNA Match
-                          </span>
-                        </div>
-
-                        <div className="flex flex-col sm:flex-row items-center gap-5">
-                          <div className="relative shrink-0 w-24 h-24 sm:w-28 sm:h-28 rounded-full overflow-hidden border-4 border-white shadow-md">
-                            <img 
-                              src={matchedCat.image} 
-                              alt={matchedCat.name}
-                              className="w-full h-full object-cover"
-                              referrerPolicy="no-referrer"
-                            />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
-                          </div>
-
-                          <div className="space-y-2 text-center sm:text-left flex-1">
-                            <span className="text-[10px] font-extrabold tracking-widest text-[#E39B24] uppercase bg-[#E39B24]/10 px-2.5 py-0.5 rounded-full select-none">
-                              專屬茶貓配對
-                            </span>
-                            <h3 className="text-xl font-serif font-bold text-stone-800">
-                              {matchedCat.name}
-                            </h3>
-                            <p className="text-xs text-stone-500 font-medium font-sans">
-                              核心特質：<span className="text-[#707040] font-bold">{matchedCat.personalityTrait}</span>
-                            </p>
-                          </div>
-                        </div>
-
-                        <p className="text-xs text-stone-600 leading-relaxed font-light border-t border-stone-100/80 pt-3">
-                          {matchedCat.description}
-                        </p>
+                    <div id="result-summary-container" className="space-y-6 text-left max-w-md mx-auto pt-6 border-t border-stone-100">
+                      {/* 1. 探測度 100% 標題（去除陰影，乾淨俐落） */}
+                      <div className="text-center py-2 select-none">
+                        <span 
+                          style={{ textShadow: 'none' }}
+                          className="text-lg md:text-xl font-extrabold tracking-widest text-[#B8860B] flex items-center justify-center gap-2"
+                        >
+                          <Sparkles size={20} className="text-[#B8860B] shrink-0" />
+                          探測度已完成：100%
+                        </span>
                       </div>
 
-                      {/* 2. THE FIVE STAGE RESULT CARDS */}
-                      <div className="space-y-4">
+                      {/* 2. 尋茶結果（您最適合的茶品 -> [貓名稱]） */}
+                      <div className="text-center py-5 border-y border-stone-100 my-2 space-y-3">
+                        <h4 className="text-stone-500 font-sans text-xs font-semibold tracking-wider">
+                          您最適合的茶品
+                        </h4>
+                        
+                        <div className="flex justify-center gap-4 py-1.5">
+                          {matchedCats.map(cat => (
+                            <div key={cat.id} className="relative w-16 h-16 rounded-full overflow-hidden border border-stone-200 shadow-xs shrink-0">
+                              <img 
+                                src={cat.image} 
+                                alt={cat.name} 
+                                className="w-full h-full object-cover" 
+                                referrerPolicy="no-referrer" 
+                              />
+                            </div>
+                          ))}
+                        </div>
+
+                        <h3 className="text-xl md:text-2xl font-bold text-stone-800 tracking-wide font-sans">
+                          {catNamesStr}
+                        </h3>
+                      </div>
+
+                      {/* 3. 五關卡回顧 */}
+                      <div className="space-y-4 pt-2">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
                             <span className="w-1.5 h-4 bg-[#707040]/60 rounded-full inline-block"></span>
@@ -1543,11 +1585,6 @@ export const BeginnerVillage: React.FC = () => {
                       {completedStages.length === 5 ? (
                         <motion.span
                           animate={{ 
-                            textShadow: [
-                              "0 0 4px rgba(112, 112, 64, 0.1)", 
-                              "0 0 14px rgba(212, 175, 55, 0.5)", 
-                              "0 0 4px rgba(112, 112, 64, 0.1)"
-                            ],
                             scale: [1, 1.02, 1]
                           }}
                           transition={{ 
@@ -1555,9 +1592,10 @@ export const BeginnerVillage: React.FC = () => {
                             repeat: Infinity, 
                             ease: "easeInOut" 
                           }}
-                          className="text-lg md:text-xl font-extrabold tracking-widest text-[#D4AF37] drop-shadow-sm flex items-center justify-center gap-2"
+                          style={{ textShadow: 'none' }}
+                          className="text-lg md:text-xl font-extrabold tracking-widest text-[#B8860B] flex items-center justify-center gap-2"
                         >
-                          <Sparkles size={20} className="text-[#D4AF37] shrink-0 animate-bounce" />
+                          <Sparkles size={20} className="text-[#B8860B] shrink-0 animate-bounce" />
                           探測度已完成：100%
                         </motion.span>
                       ) : (
