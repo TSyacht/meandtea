@@ -29,6 +29,9 @@ import {
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { supabase, supabaseUrl } from '../db';
+import { useAuth } from '../AuthContext';
+import { getSettings } from '../services/settingsService';
+import { getAvatarUrl } from '../services/productService';
 
 // Confetti Component for celebration
 const ConfettiRain = () => {
@@ -158,35 +161,35 @@ export interface TeaCatType {
 export const TEA_CAT_TYPES: TeaCatType[] = [
   {
     id: 'black_cat',
-    name: '文青炭香黑貓',
+    name: '春回紅茶貓',
     image: 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=600&h=600&q=80',
     description: '愛好靜謐與深度思考，最愛在微雨的午後泡一杯暖和的深焙黑茶，享受安靜的閱讀與白噪音時光。',
     personalityTrait: '深沉冷靜、善於傾聽與觀照內心'
   },
   {
     id: 'spring_water_cat',
-    name: '柔韻清泉水貓',
+    name: '蜜果暑月貓',
     image: 'https://images.unsplash.com/photo-1533738363-b7f9aef128ce?auto=format&fit=crop&w=600&h=600&q=80',
     description: '情感細膩溫柔，如清晨流經山石的澄澈清泉。喜愛在潺潺溪畔放鬆，與甘甜的冷泡綠茶有著天生的絕佳默契。',
     personalityTrait: '溫柔體貼、感知細膩與喜愛和諧'
   },
   {
     id: 'orange_cat',
-    name: '優雅微風橘貓',
+    name: '甘醇烏龍貓',
     image: 'https://images.unsplash.com/photo-1519052537078-e6302a4968d4?auto=format&fit=crop&w=600&h=600&q=80',
     description: '品位高雅，熱愛山居生活美學與品茗儀式感。在茶香與精緻器皿間體悟微小的幸福，最愛香氣高雅、如風般輕盈的野放白茶。',
     personalityTrait: '優雅從容、注重生活儀式感與美學'
   },
   {
     id: 'tabby_cat',
-    name: '活力暖陽小虎',
+    name: '鮮嫩綠茶貓',
     image: 'https://images.unsplash.com/photo-1573865526739-10659fec78a5?auto=format&fit=crop&w=600&h=600&q=80',
     description: '熱情奔放，渾身充滿山野生命的元力！喜歡親近自然，與同伴分享喜悅，最契合厚實飽滿、烘焙甘甜的原生焙火烏龍。',
     personalityTrait: '開朗樂觀、精力充沛與富有冒險精神'
   },
   {
     id: 'calico_cat',
-    name: '靈性山野小花',
+    name: '放鬆福圓貓',
     image: 'https://images.unsplash.com/photo-1513360309081-36f5e878fc11?auto=format&fit=crop&w=600&h=600&q=80',
     description: '與大自然有著極深的靈性共鳴，是山林最忠實的守護者。聽得懂微風與落葉的對話，最懂得品鑑稀有奇特的台灣野生野放茶。',
     personalityTrait: '靈性敏銳、與自然合一與熱愛探索'
@@ -214,6 +217,21 @@ export const BeginnerVillage: React.FC = () => {
       }
     } catch (e) {
       console.error(e);
+    }
+
+    // Merge in any database results to ensure they take priority
+    if (dbResults && dbResults.length > 0) {
+      dbResults.forEach(r => {
+        const parts = r.result_content?.split('：') || [];
+        const title = parts[0] || '';
+        const description = parts.slice(1).join('：') || '';
+        savedScores[r.stage_id] = {
+          score: r.score,
+          title: title,
+          description: description,
+          image: r.image_url || ''
+        };
+      });
     }
 
     const defaultStages = [
@@ -275,6 +293,74 @@ export const BeginnerVillage: React.FC = () => {
     });
   };
 
+  const catNames: Record<string, string> = {
+    black_cat: "春回紅茶貓",
+    spring_water_cat: "蜜果暑月貓",
+    orange_cat: "甘醇烏龍貓",
+    tabby_cat: "鮮嫩綠茶貓",
+    calico_cat: "放鬆福圓貓"
+  };
+
+  const getCatTypeForStage = (stageId: string, score: number, title: string): string => {
+    if (stageId === 'personality') {
+      if (score <= 3) return 'black_cat';
+      if (score <= 5) return 'spring_water_cat';
+      if (score <= 7) return 'orange_cat';
+      if (score <= 9) return 'tabby_cat';
+      return 'calico_cat';
+    } else if (stageId === 'zodiac') {
+      const t = title || '';
+      if (t.includes('火') || t.includes('牡羊') || t.includes('獅子') || t.includes('射手') || t.includes('烈焰')) {
+        return 'tabby_cat';
+      } else if (t.includes('水') || t.includes('雙魚') || t.includes('巨蟹') || t.includes('天蠍') || t.includes('清泉')) {
+        return 'spring_water_cat';
+      } else if (t.includes('土') || t.includes('金牛') || t.includes('處女') || t.includes('摩羯') || t.includes('炭香')) {
+        return 'black_cat';
+      } else if (t.includes('風') || t.includes('雙子') || t.includes('天秤') || t.includes('水瓶') || t.includes('微風')) {
+        return 'orange_cat';
+      } else {
+        return 'calico_cat';
+      }
+    } else if (stageId === 'energy') {
+      if (score <= 2) return 'black_cat';
+      if (score <= 4) return 'spring_water_cat';
+      if (score <= 6) return 'orange_cat';
+      if (score <= 8) return 'tabby_cat';
+      return 'calico_cat';
+    } else if (stageId === 'lifestyle') {
+      if (score <= 2) return 'black_cat';
+      if (score <= 4) return 'spring_water_cat';
+      if (score <= 6) return 'orange_cat';
+      if (score <= 8) return 'tabby_cat';
+      return 'calico_cat';
+    } else if (stageId === 'sensory') {
+      if (score <= 2) return 'black_cat';
+      if (score <= 4) return 'spring_water_cat';
+      if (score <= 6) return 'orange_cat';
+      if (score <= 8) return 'tabby_cat';
+      return 'calico_cat';
+    }
+    return 'black_cat';
+  };
+
+  const getCatImage = (catType: string, avatarsList: any[]) => {
+    const targetName = catNames[catType] || catType;
+    const found = avatarsList?.find(a => a.name === targetName);
+    if (found?.url) {
+      const baseUri = getAvatarUrl(found.url) || found.url;
+      const connector = baseUri.includes('?') ? '&' : '?';
+      return `${baseUri}${connector}t=${Date.now()}`;
+    }
+    const defaultImages: Record<string, string> = {
+      black_cat: 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=600&h=600&q=80',
+      spring_water_cat: 'https://images.unsplash.com/photo-1533738363-b7f9aef128ce?auto=format&fit=crop&w=600&h=600&q=80',
+      orange_cat: 'https://images.unsplash.com/photo-1519052537078-e6302a4968d4?auto=format&fit=crop&w=600&h=600&q=80',
+      tabby_cat: 'https://images.unsplash.com/photo-1573865526739-10659fec78a5?auto=format&fit=crop&w=600&h=600&q=80',
+      calico_cat: 'https://images.unsplash.com/photo-1513360309081-36f5e878fc11?auto=format&fit=crop&w=600&h=600&q=80'
+    };
+    return defaultImages[catType] || defaultImages.black_cat;
+  };
+
   const getMatchedTeaCats = (stagesData: { id: string; name: string; title: string; image: string; score: number; description: string }[]) => {
     const votes: Record<string, number> = {
       black_cat: 0,
@@ -286,43 +372,9 @@ export const BeginnerVillage: React.FC = () => {
 
     stagesData.forEach(stage => {
       const score = stage.score;
-      if (stage.id === 'personality') {
-        if (score <= 3) votes.black_cat += 1;
-        else if (score <= 5) votes.spring_water_cat += 1;
-        else if (score <= 7) votes.orange_cat += 1;
-        else if (score <= 9) votes.tabby_cat += 1;
-        else votes.calico_cat += 1;
-      } else if (stage.id === 'zodiac') {
-        const title = stage.title || '';
-        if (title.includes('火') || title.includes('牡羊') || title.includes('獅子') || title.includes('射手') || title.includes('烈焰')) {
-          votes.tabby_cat += 1;
-        } else if (title.includes('水') || title.includes('雙魚') || title.includes('巨蟹') || title.includes('天蠍') || title.includes('清泉')) {
-          votes.spring_water_cat += 1;
-        } else if (title.includes('土') || title.includes('金牛') || title.includes('處女') || title.includes('摩羯') || title.includes('炭香')) {
-          votes.black_cat += 1;
-        } else if (title.includes('風') || title.includes('雙子') || title.includes('天秤') || title.includes('水瓶') || title.includes('微風')) {
-          votes.orange_cat += 1;
-        } else {
-          votes.calico_cat += 1;
-        }
-      } else if (stage.id === 'energy') {
-        if (score <= 2) votes.black_cat += 1;
-        else if (score <= 4) votes.spring_water_cat += 1;
-        else if (score <= 6) votes.orange_cat += 1;
-        else if (score <= 8) votes.tabby_cat += 1;
-        else votes.calico_cat += 1;
-      } else if (stage.id === 'lifestyle') {
-        if (score <= 2) votes.black_cat += 1;
-        else if (score <= 4) votes.spring_water_cat += 1;
-        else if (score <= 6) votes.orange_cat += 1;
-        else if (score <= 8) votes.tabby_cat += 1;
-        else votes.calico_cat += 1;
-      } else if (stage.id === 'sensory') {
-        if (score <= 2) votes.black_cat += 1;
-        else if (score <= 4) votes.spring_water_cat += 1;
-        else if (score <= 6) votes.orange_cat += 1;
-        else if (score <= 8) votes.tabby_cat += 1;
-        else votes.calico_cat += 1;
+      const catType = getCatTypeForStage(stage.id, score, stage.title);
+      if (catType && votes[catType] !== undefined) {
+        votes[catType] += 1;
       }
     });
 
@@ -332,14 +384,25 @@ export const BeginnerVillage: React.FC = () => {
     });
 
     if (maxVotes === 0) {
-      return [TEA_CAT_TYPES[0]];
+      return [{
+        id: 'black_cat',
+        name: '春回紅茶貓',
+        image: getCatImage('black_cat', systemAvatars)
+      }];
     }
 
     const matchedKeys = Object.keys(votes).filter(k => votes[k] === maxVotes);
-    return matchedKeys.map(key => TEA_CAT_TYPES.find(c => c.id === key)!).filter(Boolean);
+    return matchedKeys.map(key => ({
+      id: key,
+      name: catNames[key] || key,
+      image: getCatImage(key, systemAvatars)
+    })).filter(Boolean);
   };
 
   const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
+  const [dbResults, setDbResults] = useState<any[]>([]);
+  const [systemAvatars, setSystemAvatars] = useState<any[]>([]);
   const [config, setConfig] = useState<BeginnerVillageConfig | null>(null);
   const [completedStages, setCompletedStages] = useState<string[]>([]);
   const [activeStageId, setActiveStageId] = useState<string | null>(null);
@@ -389,13 +452,58 @@ export const BeginnerVillage: React.FC = () => {
     // Scroll to top
     window.scrollTo(0, 0);
 
-    // Fetch config
-    const loadConfig = async () => {
+    // Fetch config and user data
+    const loadConfigAndUserData = async () => {
+      setLoading(true);
       try {
         const data = await getVillageConfig();
         setConfig(data);
+
+        // Fetch site settings for avatars (instantly refetched to clear cache!)
+        const settings = await getSettings(true);
+        if (settings?.system_avatars) {
+          setSystemAvatars(settings.system_avatars);
+        }
+
+        // Fetch user village results from Supabase if user is logged in
+        if (user) {
+          const { data: results, error } = await supabase
+            .from('user_village_results')
+            .select('stage_id, score, result_content, cat_type, image_url')
+            .eq('user_id', user.id);
+          
+          if (error) {
+            console.error('Failed to select user_village_results:', error);
+          } else if (results && results.length > 0) {
+            setDbResults(results);
+            // Sync with local state
+            const completedIds = results.map(r => r.stage_id);
+            setCompletedStages(completedIds);
+            localStorage.setItem('miye_village_completed', JSON.stringify(completedIds));
+
+            const scoreObj: Record<string, any> = {};
+            results.forEach(r => {
+              const parts = r.result_content?.split('：') || [];
+              const title = parts[0] || '';
+              const description = parts.slice(1).join('：') || '';
+              scoreObj[r.stage_id] = {
+                title: title,
+                description: description,
+                image: r.image_url || '',
+                score: r.score
+              };
+            });
+            localStorage.setItem('miye_village_stage_score', JSON.stringify(scoreObj));
+
+            if (completedIds.length >= 5) {
+              setUserCompletedAllLevels(true);
+              localStorage.setItem('user_completed_all_levels', 'true');
+              setShowUltimateScreen(true);
+            }
+          }
+        }
       } catch (err) {
-        toast.error('讀取新手村設定失敗');
+        console.error('Error loading Beginner Village data:', err);
       } finally {
         setLoading(false);
       }
@@ -408,7 +516,7 @@ export const BeginnerVillage: React.FC = () => {
       setShowUltimateScreen(true);
     }
 
-    // Load progress from localStorage
+    // Load progress from localStorage as fallback/initial
     const saved = localStorage.getItem('miye_village_completed');
     if (saved) {
       try {
@@ -421,8 +529,8 @@ export const BeginnerVillage: React.FC = () => {
       }
     }
 
-    loadConfig();
-  }, []);
+    loadConfigAndUserData();
+  }, [user]);
 
   // Check if we meet the ultimate reward trigger on completing another stage
   const verifyOverallCompletion = (updatedCompleted: string[]) => {
@@ -494,10 +602,36 @@ export const BeginnerVillage: React.FC = () => {
       });
 
       // Save progress
-      if (!completedStages.includes(activeStageId)) {
-        const updated = [...completedStages, activeStageId];
-        setCompletedStages(updated);
-        localStorage.setItem('miye_village_completed', JSON.stringify(updated));
+      const updated = completedStages.includes(activeStageId)
+        ? completedStages
+        : [...completedStages, activeStageId];
+      
+      setCompletedStages(updated);
+      localStorage.setItem('miye_village_completed', JSON.stringify(updated));
+
+      // Save to Supabase in background if user is logged in
+      if (user) {
+        const calculatedCat = getCatTypeForStage(activeStageId, nextScore, matchedRange.title);
+        const descText = (matchedRange as any).description || matchedRange.socialText || '';
+        const resultContentText = `${matchedRange.title}：${descText}`;
+        supabase.from('user_village_results').upsert({
+          user_id: user.id,
+          stage_id: activeStageId,
+          score: nextScore,
+          result_content: resultContentText,
+          cat_type: calculatedCat,
+          image_url: matchedRange.image,
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'user_id,stage_id' }).then(({ error }) => {
+          if (error) {
+            console.error('Failed to save to Supabase:', error);
+          } else {
+            // Refresh local dbResults state so it updates UI
+            supabase.from('user_village_results').select('stage_id, score, result_content, cat_type, image_url').eq('user_id', user.id).then(({ data }) => {
+              if (data) setDbResults(data);
+            });
+          }
+        });
       }
     }
   };
@@ -532,10 +666,36 @@ export const BeginnerVillage: React.FC = () => {
     });
 
     // Save progress
-    if (!completedStages.includes('zodiac')) {
-      const updated = [...completedStages, 'zodiac'];
-      setCompletedStages(updated);
-      localStorage.setItem('miye_village_completed', JSON.stringify(updated));
+    const updated = completedStages.includes('zodiac')
+      ? completedStages
+      : [...completedStages, 'zodiac'];
+    
+    setCompletedStages(updated);
+    localStorage.setItem('miye_village_completed', JSON.stringify(updated));
+
+    // Save to Supabase in background if user is logged in
+    if (user) {
+      const calculatedCat = getCatTypeForStage('zodiac', 0, match.title);
+      const descText = match.description || match.socialText || '';
+      const resultContentText = `${match.title}：${descText}`;
+      supabase.from('user_village_results').upsert({
+        user_id: user.id,
+        stage_id: 'zodiac',
+        score: 0,
+        result_content: resultContentText,
+        cat_type: calculatedCat,
+        image_url: match.image,
+        updated_at: new Date().toISOString()
+      }, { onConflict: 'user_id,stage_id' }).then(({ error }) => {
+        if (error) {
+          console.error('Failed to save to Supabase:', error);
+        } else {
+          // Refresh local dbResults state so it updates UI
+          supabase.from('user_village_results').select('stage_id, score, result_content, cat_type, image_url').eq('user_id', user.id).then(({ data }) => {
+            if (data) setDbResults(data);
+          });
+        }
+      });
     }
   };
 
