@@ -100,12 +100,120 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       checkHash();
     });
 
+    const mergeTempResults = async (realUserId: string, tempSessionId: string) => {
+      try {
+        const { data: tempRows, error: tempError } = await supabase
+          .from('temp_test_results')
+          .select('*')
+          .eq('session_id', tempSessionId);
+
+        if (tempError) {
+          console.error('Error fetching temp results for merge:', tempError);
+          return;
+        }
+
+        if (!tempRows || tempRows.length === 0) {
+          return;
+        }
+
+        const tempRecord = tempRows[0];
+        const tempTestData = tempRecord.test_data || {};
+
+        // Fetch user's existing record
+        const { data: userRows, error: userError } = await supabase
+          .from('temp_test_results')
+          .select('*')
+          .eq('test_data->>user_id', realUserId);
+
+        if (userError) {
+          console.error('Error fetching user results for merge:', userError);
+          return;
+        }
+
+        if (userRows && userRows.length > 0) {
+          // Merge temp results into existing user record
+          const userRecord = userRows[0];
+          const userTestData = userRecord.test_data || {};
+
+          const mergedStageScores = {
+            ...(userTestData.stage_scores || {}),
+            ...(tempTestData.stage_scores || {})
+          };
+
+          const mergedCompletedStages = Array.from(new Set([
+            ...(userTestData.completed_stages || []),
+            ...(tempTestData.completed_stages || [])
+          ]));
+
+          const catType = tempTestData.cat_type || userTestData.cat_type || 'black_cat';
+
+          const mergedTestData = {
+            ...userTestData,
+            user_id: realUserId,
+            completed_stages: mergedCompletedStages,
+            stage_scores: mergedStageScores,
+            cat_type: catType
+          };
+
+          const { error: updateError } = await supabase
+            .from('temp_test_results')
+            .update({
+              test_data: mergedTestData,
+              session_id: null
+            })
+            .eq('id', userRecord.id);
+
+          if (!updateError) {
+            console.log('Merged temp results into existing user record successfully.');
+            // Clean up temporary record
+            await supabase
+              .from('temp_test_results')
+              .delete()
+              .eq('id', tempRecord.id);
+          } else {
+            console.error('Merge update failed:', updateError.message);
+          }
+        } else {
+          // No existing record for user, update temporary record's user_id and nullify session_id
+          const updatedTestData = {
+            ...tempTestData,
+            user_id: realUserId
+          };
+
+          const { error: updateError } = await supabase
+            .from('temp_test_results')
+            .update({
+              test_data: updatedTestData,
+              session_id: null
+            })
+            .eq('id', tempRecord.id);
+
+          if (!updateError) {
+            console.log('Assigned temp results to user successfully.');
+          } else {
+            console.error('Assigning temp results failed:', updateError.message);
+          }
+        }
+
+        // Clear local session ID to prevent redundant merge attempts
+        localStorage.removeItem('session_id');
+      } catch (err) {
+        console.error('Exception during mergeTempResults:', err);
+      }
+    };
+
     // 監聽 Auth 狀態變化
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
         fetchProfile(session.user.id);
+        
+        // Merge temp test results if available
+        const tempSessionId = localStorage.getItem('session_id');
+        if (tempSessionId) {
+          mergeTempResults(session.user.id, tempSessionId);
+        }
       } else {
         setProfile(null);
       }

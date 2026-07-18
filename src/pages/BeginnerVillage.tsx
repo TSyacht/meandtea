@@ -442,6 +442,190 @@ export const BeginnerVillage: React.FC = () => {
     });
   }, [activeStageId, currentQuestionIndex, stageResult, showUltimateScreen, inIntroScreen]);
 
+  const fetchVillageResultsFromDB = async (currentSessionId?: string | null) => {
+    const sessionId = currentSessionId || localStorage.getItem('session_id');
+    const userId = user?.id || null;
+
+    let record: any = null;
+
+    try {
+      if (sessionId) {
+        const { data, error } = await supabase
+          .from('temp_test_results')
+          .select('*')
+          .eq('session_id', sessionId)
+          .order('created_at', { ascending: false })
+          .limit(1);
+
+        if (!error && data && data.length > 0) {
+          record = data[0];
+        }
+      }
+
+      if (!record && userId) {
+        const { data, error } = await supabase
+          .from('temp_test_results')
+          .select('*')
+          .eq('test_data->>user_id', userId)
+          .order('created_at', { ascending: false })
+          .limit(1);
+
+        if (!error && data && data.length > 0) {
+          record = data[0];
+        }
+      }
+
+      if (record && record.test_data) {
+        const testData = record.test_data;
+        const stageScores = testData.stage_scores || {};
+        const completedList = testData.completed_stages || Object.keys(stageScores);
+
+        const mappedResults = Object.keys(stageScores).map(sId => {
+          const val = stageScores[sId];
+          return {
+            stage_id: sId,
+            score: val.score,
+            result_content: `${val.title}：${val.description}`,
+            image_url: val.image,
+            cat_type: testData.cat_type || 'black_cat'
+          };
+        });
+
+        setDbResults(mappedResults);
+        setCompletedStages(completedList);
+        localStorage.setItem('miye_village_completed', JSON.stringify(completedList));
+
+        const scoreObj: Record<string, any> = {};
+        Object.keys(stageScores).forEach(sId => {
+          const val = stageScores[sId];
+          scoreObj[sId] = {
+            title: val.title,
+            description: val.description,
+            image: val.image,
+            score: val.score
+          };
+        });
+        localStorage.setItem('miye_village_stage_score', JSON.stringify(scoreObj));
+
+        if (completedList.length >= 5) {
+          setUserCompletedAllLevels(true);
+          localStorage.setItem('user_completed_all_levels', 'true');
+          setShowUltimateScreen(true);
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching village results:', err);
+    }
+  };
+
+  const saveVillageResult = async (stageId: string, score: number, title: string, description: string, image: string) => {
+    let sessionId = localStorage.getItem('session_id');
+    if (!sessionId) {
+      sessionId = typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+        ? crypto.randomUUID()
+        : 'session_' + Math.random().toString(36).substring(2, 15) + '_' + Date.now();
+      localStorage.setItem('session_id', sessionId);
+    }
+
+    const userId = user?.id || null;
+    let existingRow: any = null;
+
+    try {
+      if (userId) {
+        const { data } = await supabase
+          .from('temp_test_results')
+          .select('*')
+          .eq('test_data->>user_id', userId)
+          .order('created_at', { ascending: false })
+          .limit(1);
+        
+        if (data && data.length > 0) {
+          existingRow = data[0];
+        }
+      }
+
+      if (!existingRow && sessionId) {
+        const { data } = await supabase
+          .from('temp_test_results')
+          .select('*')
+          .eq('session_id', sessionId)
+          .order('created_at', { ascending: false })
+          .limit(1);
+
+        if (data && data.length > 0) {
+          existingRow = data[0];
+        }
+      }
+    } catch (err) {
+      console.error('Error finding existing test result:', err);
+    }
+
+    const currentTestData = existingRow?.test_data || {
+      user_id: userId,
+      completed_stages: [],
+      stage_scores: {}
+    };
+
+    if (userId) {
+      currentTestData.user_id = userId;
+    }
+
+    if (!currentTestData.stage_scores) {
+      currentTestData.stage_scores = {};
+    }
+    currentTestData.stage_scores[stageId] = {
+      score,
+      title,
+      description,
+      image
+    };
+
+    const completedList = currentTestData.completed_stages || [];
+    if (!completedList.includes(stageId)) {
+      completedList.push(stageId);
+    }
+    currentTestData.completed_stages = completedList;
+
+    const stagesData = Object.keys(currentTestData.stage_scores).map(sId => {
+      const val = currentTestData.stage_scores[sId];
+      return {
+        id: sId,
+        score: val.score,
+        title: val.title,
+        image: val.image,
+        description: val.description,
+        name: sId
+      };
+    });
+
+    const matchedCats = getMatchedTeaCats(stagesData);
+    const primaryCat = matchedCats[0]?.id || 'black_cat';
+    currentTestData.cat_type = primaryCat;
+
+    try {
+      if (existingRow) {
+        await supabase
+          .from('temp_test_results')
+          .update({
+            test_data: currentTestData,
+            session_id: userId ? null : sessionId
+          })
+          .eq('id', existingRow.id);
+      } else {
+        await supabase
+          .from('temp_test_results')
+          .insert([{
+            session_id: userId ? null : sessionId,
+            test_data: currentTestData
+          }]);
+      }
+    } catch (err) {
+      console.error('Error saving temp test result:', err);
+    }
+
+    fetchVillageResultsFromDB(sessionId);
+  };
+
   useEffect(() => {
     if (showUltimateScreen) {
       setHasBegunCeremony(false);
@@ -452,7 +636,15 @@ export const BeginnerVillage: React.FC = () => {
     // Scroll to top
     window.scrollTo(0, 0);
 
-    // Fetch config and user data
+    // Ensure session_id exists
+    let sessionId = localStorage.getItem('session_id');
+    if (!sessionId) {
+      sessionId = typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+        ? crypto.randomUUID()
+        : 'session_' + Math.random().toString(36).substring(2, 15) + '_' + Date.now();
+      localStorage.setItem('session_id', sessionId);
+    }
+
     const loadConfigAndUserData = async () => {
       setLoading(true);
       try {
@@ -465,43 +657,7 @@ export const BeginnerVillage: React.FC = () => {
           setSystemAvatars(settings.system_avatars);
         }
 
-        // Fetch user village results from Supabase if user is logged in
-        if (user) {
-          const { data: results, error } = await supabase
-            .from('user_village_results')
-            .select('stage_id, score, result_content, cat_type, image_url')
-            .eq('user_id', user.id);
-          
-          if (error) {
-            console.error('Failed to select user_village_results:', error);
-          } else if (results && results.length > 0) {
-            setDbResults(results);
-            // Sync with local state
-            const completedIds = results.map(r => r.stage_id);
-            setCompletedStages(completedIds);
-            localStorage.setItem('miye_village_completed', JSON.stringify(completedIds));
-
-            const scoreObj: Record<string, any> = {};
-            results.forEach(r => {
-              const parts = r.result_content?.split('：') || [];
-              const title = parts[0] || '';
-              const description = parts.slice(1).join('：') || '';
-              scoreObj[r.stage_id] = {
-                title: title,
-                description: description,
-                image: r.image_url || '',
-                score: r.score
-              };
-            });
-            localStorage.setItem('miye_village_stage_score', JSON.stringify(scoreObj));
-
-            if (completedIds.length >= 5) {
-              setUserCompletedAllLevels(true);
-              localStorage.setItem('user_completed_all_levels', 'true');
-              setShowUltimateScreen(true);
-            }
-          }
-        }
+        await fetchVillageResultsFromDB(sessionId);
       } catch (err) {
         console.error('Error loading Beginner Village data:', err);
       } finally {
@@ -609,30 +765,8 @@ export const BeginnerVillage: React.FC = () => {
       setCompletedStages(updated);
       localStorage.setItem('miye_village_completed', JSON.stringify(updated));
 
-      // Save to Supabase in background if user is logged in
-      if (user) {
-        const calculatedCat = getCatTypeForStage(activeStageId, nextScore, matchedRange.title);
-        const descText = (matchedRange as any).description || matchedRange.socialText || '';
-        const resultContentText = `${matchedRange.title}：${descText}`;
-        supabase.from('user_village_results').upsert({
-          user_id: user.id,
-          stage_id: activeStageId,
-          score: nextScore,
-          result_content: resultContentText,
-          cat_type: calculatedCat,
-          image_url: matchedRange.image,
-          updated_at: new Date().toISOString()
-        }, { onConflict: 'user_id,stage_id' }).then(({ error }) => {
-          if (error) {
-            console.error('Failed to save to Supabase:', error);
-          } else {
-            // Refresh local dbResults state so it updates UI
-            supabase.from('user_village_results').select('stage_id, score, result_content, cat_type, image_url').eq('user_id', user.id).then(({ data }) => {
-              if (data) setDbResults(data);
-            });
-          }
-        });
-      }
+      const descText = (matchedRange as any).description || matchedRange.socialText || '';
+      saveVillageResult(activeStageId, nextScore, matchedRange.title, descText, matchedRange.image);
     }
   };
 
@@ -673,30 +807,8 @@ export const BeginnerVillage: React.FC = () => {
     setCompletedStages(updated);
     localStorage.setItem('miye_village_completed', JSON.stringify(updated));
 
-    // Save to Supabase in background if user is logged in
-    if (user) {
-      const calculatedCat = getCatTypeForStage('zodiac', 0, match.title);
-      const descText = match.description || match.socialText || '';
-      const resultContentText = `${match.title}：${descText}`;
-      supabase.from('user_village_results').upsert({
-        user_id: user.id,
-        stage_id: 'zodiac',
-        score: 0,
-        result_content: resultContentText,
-        cat_type: calculatedCat,
-        image_url: match.image,
-        updated_at: new Date().toISOString()
-      }, { onConflict: 'user_id,stage_id' }).then(({ error }) => {
-        if (error) {
-          console.error('Failed to save to Supabase:', error);
-        } else {
-          // Refresh local dbResults state so it updates UI
-          supabase.from('user_village_results').select('stage_id, score, result_content, cat_type, image_url').eq('user_id', user.id).then(({ data }) => {
-            if (data) setDbResults(data);
-          });
-        }
-      });
-    }
+    const descText = match.description || match.socialText || '';
+    saveVillageResult('zodiac', 0, match.title, descText, match.image);
   };
 
   const copyToClipboard = (text: string) => {
