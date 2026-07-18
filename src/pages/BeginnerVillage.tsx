@@ -31,7 +31,7 @@ import { toast } from 'react-hot-toast';
 import { supabase, supabaseUrl } from '../db';
 import { useAuth } from '../AuthContext';
 import { getSettings } from '../services/settingsService';
-import { getAvatarUrl } from '../services/productService';
+import { getAvatarUrl, getProducts, Product, getImageUrl } from '../services/productService';
 
 // Confetti Component for celebration
 const ConfettiRain = () => {
@@ -195,6 +195,119 @@ export const TEA_CAT_TYPES: TeaCatType[] = [
     personalityTrait: '靈性敏銳、與自然合一與熱愛探索'
   }
 ];
+
+const teaSoulDetails: Record<string, {
+  tagline: string;
+  tags: string[];
+  element: string;
+  analysis: string;
+  teaRecommendationType: string;
+}> = {
+  black_cat: {
+    tagline: '溫暖內斂、細膩包容的暖心守護者',
+    tags: ['情感細緻', '默默守護', '沉穩溫和'],
+    element: '大地靈魂元素',
+    analysis: '在五關探索歷程中，您的特質人格與生活風格皆透露出溫暖而堅定的氣息。您不追求短暫的狂熱，而是鍾情於雋永的陪伴。對你而言，一杯好茶、一次深入靈魂的談話，都能在心中激盪出深刻的回甘。您的茶系靈魂是醇厚的紅茶，給予周遭無限的包容。',
+    teaRecommendationType: '紅茶'
+  },
+  spring_water_cat: {
+    tagline: '活潑靈動、朝氣蓬勃的陽光逐光者',
+    tags: ['活力四射', '熱情純真', '靈感無限'],
+    element: '朝陽烈火元素',
+    analysis: '您的能量密碼和感官覺知充滿了生命力，宛如夏日正午的朝陽。不論身處何地，您都是那個帶來歡笑與希望的人。您適合品嘗充滿果香與蜜糖芬芳的茶品，在簡約而歡樂的氣氛中解密大自然的無限樂趣。您的茶系靈魂是蜜果香茶，將熱情播撒在身邊。',
+    teaRecommendationType: '花草茶'
+  },
+  orange_cat: {
+    tagline: '沈穩優雅、睿智深邃的時光品鑑家',
+    tags: ['講究美學', '成熟優雅', '品味非凡'],
+    element: '高山微風元素',
+    analysis: '您是一位不折不扣的美學典雅追求者。在生活風格與器物美學上，您有著極高的自律與品味。您不會隨波逐流，而是專注於事物的本質與歲月沉澱的美好。您最適合半發酵、焙火工藝極佳的甘醇烏龍茶，在繁復的層次中細細品讀時光的精緻。',
+    teaRecommendationType: '烏龍'
+  },
+  tabby_cat: {
+    tagline: '清新脫俗、自由純真的森林尋密者',
+    tags: ['崇尚自由', '靈性敏銳', '藝術天賦'],
+    element: '純淨甘泉元素',
+    analysis: '您對大自然有著天生的嚮往與純真的熱愛，在嗅覺與視覺感官上極具天賦。您的心靈一塵不染，喜歡在自由自在的呼吸中解密山林的美好。您不需要過多的人工雕琢，宛如一杯現泡的純淨綠茶，讓人感受一抹清涼與寧靜。',
+    teaRecommendationType: '綠茶'
+  },
+  calico_cat: {
+    tagline: '靈性敏銳、溫潤樂天的療癒大師',
+    tags: ['圓融樂觀', '與自然共生', '療癒感知'],
+    element: '山林雲霧元素',
+    analysis: '您懂得在簡單的日常中品味幸福。不論是清晨的一縷微風，還是午後的斜陽，都能化作您心靈的療癒。您與大自然、小動物有著深厚的共鳴，生活在和諧與圓滿中。最適合您的是熟成福圓茶，在醇厚溫潤的香氣中，圓滿您的每一天。',
+    teaRecommendationType: '熟茶'
+  }
+};
+
+const getDimensionAnalysis = (id: string, score: number) => {
+  switch (id) {
+    case 'personality':
+      return {
+        dimension: '特質精神 (Spirituality)',
+        meaning: '代表你內在精神的厚度與抗壓力',
+        badge: score >= 8 ? '極致堅韌' : score >= 5 ? '柔和平衡' : '蓄勢內隱',
+        color: 'text-rose-600 bg-rose-50 border-rose-200',
+        barColor: 'bg-rose-500',
+        detail: score >= 8 
+          ? '你擁有極為罕見的精神厚度，如同高山巨木般能從容抵禦風霜，並滋養著身旁的萬物。' 
+          : '你具備退一步海闊天空的智慧，兼具堅毅與柔韌，能優雅地面對各種環境挑戰。'
+      };
+    case 'zodiac':
+      return {
+        dimension: '宇宙共鳴 (Cosmic Synergy)',
+        meaning: '象徵你與星辰萬物的契合度',
+        badge: score >= 8 ? '天選星緣' : score >= 5 ? '和諧共感' : '星雲漫漫',
+        color: 'text-amber-600 bg-amber-50 border-amber-200',
+        barColor: 'bg-amber-500',
+        detail: score >= 8 
+          ? '你與宇宙星宿有着強烈的契合感，直覺敏銳非凡，深受自然韻律的庇護與啟發。' 
+          : '你對周遭能量變動有着細緻的感受力，能和諧地順應自然節奏、自得其樂。'
+      };
+    case 'energy':
+      return {
+        dimension: '身心活力 (Vitality)',
+        meaning: '反映你今日內在生命的充沛程度',
+        badge: score >= 8 ? '生命朝陽' : score >= 5 ? '溫潤平衡' : '靜謐蘊能',
+        color: 'text-emerald-600 bg-emerald-50 border-emerald-200',
+        barColor: 'bg-emerald-500',
+        detail: score >= 8 
+          ? '你的體內正流淌著宛如正午朝陽的充沛能量，生命元氣滿滿，極具感染力。' 
+          : '你處於最完美的溫潤平衡狀態，心境平和、呼吸綿長，是最佳的茶飲品鑑狀態。'
+      };
+    case 'lifestyle':
+      return {
+        dimension: '生活美學 (Aestheticism)',
+        meaning: '展現你對生活細節與儀式感的講究',
+        badge: score >= 8 ? '美學大師' : score >= 5 ? '典雅生活' : '隨性自然',
+        color: 'text-indigo-600 bg-indigo-50 border-indigo-200',
+        barColor: 'bg-indigo-500',
+        detail: score >= 8 
+          ? '你將生活昇華為藝術，對器物、茶與心意極為挑剔，追求無瑕的美學儀式感。' 
+          : '你講究生活的優雅與舒適度，注重細節與質感，懂得在忙碌中營造一方淨土。'
+      };
+    case 'sensory':
+      return {
+        dimension: '感官感知 (Perception)',
+        meaning: '顯示你對茶香、自然細節的敏銳度',
+        badge: score >= 8 ? '天生品茶師' : score >= 5 ? '敏銳感知' : '自然共振',
+        color: 'text-purple-600 bg-purple-50 border-purple-200',
+        barColor: 'bg-purple-500',
+        detail: score >= 8 
+          ? '你的感官極具天賦，一呼一吸間便能解密山林的奧妙，是天生的茶香密碼破譯者。' 
+          : '你對細微的芬芳與口感層次有著很好的鑒賞力，能充分享受一杯茶帶來的多維樂趣。'
+      };
+    default:
+      return {
+        dimension: '未知維度',
+        meaning: '尋茶之旅的神秘維度',
+        badge: '未知狀態',
+        color: 'text-stone-600 bg-stone-50 border-stone-200',
+        barColor: 'bg-stone-500',
+        detail: '神祕莫測的感知維度。'
+      };
+  }
+};
 
 export const BeginnerVillage: React.FC = () => {
   const saveStageScoreToLocalStorage = (stageId: string, result: { title: string; image: string; score: number; description: string }) => {
@@ -429,6 +542,8 @@ export const BeginnerVillage: React.FC = () => {
   const [showConfetti, setShowConfetti] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [inIntroScreen, setInIntroScreen] = useState(false);
+  const [showMidwayReview, setShowMidwayReview] = useState(false);
+  const [productsList, setProductsList] = useState<Product[]>([]);
 
   // Auto scroll-to-top on state transitions: starting quiz, switching questions, viewing results, or returning to map.
   useEffect(() => {
@@ -658,6 +773,13 @@ export const BeginnerVillage: React.FC = () => {
         }
 
         await fetchVillageResultsFromDB(sessionId);
+
+        try {
+          const prods = await getProducts();
+          setProductsList(prods);
+        } catch (pe) {
+          console.error('Failed to load products in BeginnerVillage:', pe);
+        }
       } catch (err) {
         console.error('Error loading Beginner Village data:', err);
       } finally {
@@ -1137,10 +1259,9 @@ export const BeginnerVillage: React.FC = () => {
                 {(() => {
                   const stagesData = getStageSummaryData();
                   const matchedCats = getMatchedTeaCats(stagesData);
-                  const catNamesStr = matchedCats.map(c => c.name).join(' 和 ');
 
                   return (
-                    <div id="result-summary-container" className="space-y-6 text-left max-w-md mx-auto pt-6 border-t border-stone-100">
+                    <div id="result-summary-container" className="space-y-8 text-left max-w-md mx-auto pt-6 border-t border-stone-100">
                       {/* 1. 探測度 100% 標題（去除陰影，乾淨俐落） */}
                       <div className="text-center py-2 select-none">
                         <span 
@@ -1152,92 +1273,212 @@ export const BeginnerVillage: React.FC = () => {
                         </span>
                       </div>
 
-                      {/* 2. 尋茶結果（您最適合的茶品 -> [貓名稱]） */}
-                      <div className="text-center py-5 border-y border-stone-100 my-2 space-y-3">
-                        <h4 className="text-stone-500 font-sans text-xs font-semibold tracking-wider">
-                          您最適合的茶品
-                        </h4>
-                        
-                        <div className="flex justify-center gap-4 py-1.5">
-                          {matchedCats.map(cat => (
-                            <div key={cat.id} className="relative w-16 h-16 rounded-full overflow-hidden border border-stone-200 shadow-xs shrink-0">
-                              <img 
-                                src={cat.image} 
-                                alt={cat.name} 
-                                className="w-full h-full object-cover" 
-                                referrerPolicy="no-referrer" 
-                              />
-                            </div>
-                          ))}
+                      {/* A. 茶系靈魂人格 */}
+                      <div className="bg-white/90 border border-stone-200/50 rounded-3xl p-6 shadow-sm space-y-6">
+                        <div className="text-center">
+                          <span className="inline-flex items-center gap-1 text-[10px] bg-amber-500/10 text-amber-700 font-extrabold px-3 py-1 rounded-full uppercase tracking-wider">
+                            👑 最終探索成果：茶系靈魂覺醒
+                          </span>
+                          <h3 className="text-2xl font-serif font-bold text-stone-800 mt-3 tracking-wide">
+                            您的「茶系靈魂」人格結果
+                          </h3>
                         </div>
 
-                        <h3 className="text-xl md:text-2xl font-bold text-stone-800 tracking-wide font-sans">
-                          {catNamesStr}
-                        </h3>
-                      </div>
+                        {matchedCats.map(cat => {
+                          const details = teaSoulDetails[cat.id] || {
+                            tagline: '清新自然、與萬物契合的靈魂尋茶者',
+                            tags: ['熱愛自然', '和諧包容'],
+                            element: '大地自然元素',
+                            analysis: '您在尋茶之旅中展現出與自然和諧共處的深厚心靈特質。您的感知敏銳，喜歡在一呼一吸間解密山林的奧妙。您適合品嘗覓野茶精選的各式好茶，讓身心得到最極致的放鬆。',
+                            teaRecommendationType: '茶'
+                          };
 
-                      {/* 3. 五關卡回顧 */}
-                      <div className="space-y-4 pt-2">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <span className="w-1.5 h-4 bg-[#707040]/60 rounded-full inline-block"></span>
-                            <h4 className="text-xs font-bold text-stone-800 tracking-wider">五維尋茶關卡歷程</h4>
-                          </div>
-                          <span className="text-[10px] font-bold text-stone-400 font-mono">5 Dimensions</span>
-                        </div>
-
-                        <div className="grid grid-cols-1 gap-3.5">
-                          {stagesData.map((stage) => {
-                            const getStageIcon = (id: string) => {
-                              switch (id) {
-                                case 'personality':
-                                  return <Heart size={14} className="text-rose-500" />;
-                                case 'zodiac':
-                                  return <Sparkles size={14} className="text-amber-500" />;
-                                case 'energy':
-                                  return <Activity size={14} className="text-emerald-500" />;
-                                case 'lifestyle':
-                                  return <Moon size={14} className="text-indigo-500" />;
-                                case 'sensory':
-                                  return <Eye size={14} className="text-purple-500" />;
-                                default:
-                                  return <CheckCircle2 size={14} className="text-[#707040]" />;
-                              }
-                            };
-
-                            return (
-                              <div 
-                                key={stage.id}
-                                className="bg-white/80 hover:bg-white p-4 rounded-2xl border border-stone-100 shadow-xs flex gap-4 transition-all duration-300 hover:shadow-sm"
-                                style={{ borderLeftWidth: '4px', borderLeftColor: '#707040' }}
-                              >
-                                <div className="shrink-0 w-12 h-12 rounded-xl overflow-hidden bg-stone-100 border border-stone-100">
+                          return (
+                            <div key={cat.id} className="space-y-4">
+                              <div className="flex flex-col items-center">
+                                <div className="relative w-36 h-36 rounded-2xl overflow-hidden border-2 border-amber-400 shadow-md mb-4 bg-stone-100 group">
                                   <img 
-                                    src={stage.image} 
-                                    alt={stage.title} 
-                                    className="w-full h-full object-cover"
-                                    referrerPolicy="no-referrer"
+                                    src={cat.image} 
+                                    alt={cat.name} 
+                                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
+                                    referrerPolicy="no-referrer" 
                                   />
                                 </div>
-                                <div className="space-y-1 flex-1 min-w-0">
-                                  <div className="flex items-center gap-1.5">
-                                    <span className="p-0.5 bg-stone-50 rounded-md inline-flex items-center justify-center">
-                                      {getStageIcon(stage.id)}
-                                    </span>
-                                    <span className="text-[10px] font-extrabold text-stone-400 tracking-wider uppercase font-sans">
-                                      {stage.name}
-                                    </span>
-                                  </div>
-                                  <h5 className="text-xs font-bold text-stone-800 truncate">
-                                    {stage.title}
-                                  </h5>
-                                  <p className="text-[10px] text-stone-500 font-light leading-relaxed line-clamp-1">
-                                    {stage.description}
-                                  </p>
+                                <h4 className="text-xl font-bold text-stone-800 tracking-wide font-sans flex items-center gap-1.5">
+                                  {cat.name}
+                                </h4>
+                                <span className="text-xs text-amber-700 font-extrabold font-mono tracking-widest mt-1 bg-amber-50 border border-amber-200 px-2.5 py-0.5 rounded-md">
+                                  {details.element}
+                                </span>
+                              </div>
+
+                              <div className="text-center py-2">
+                                <p className="text-sm font-bold text-stone-700 font-serif italic">
+                                  「{details.tagline}」
+                                </p>
+                              </div>
+
+                              <div className="flex flex-wrap justify-center gap-1.5 pb-2">
+                                {details.tags.map(tag => (
+                                  <span key={tag} className="text-[10px] font-bold text-stone-600 bg-stone-100 px-2.5 py-1 rounded-lg">
+                                    #{tag}
+                                  </span>
+                                ))}
+                              </div>
+
+                              <div className="bg-stone-50/80 border border-stone-100 p-4 rounded-2xl text-xs md:text-sm text-stone-600 leading-relaxed font-light text-left">
+                                {details.analysis}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      {/* B. 五關數據的綜合解析 */}
+                      <div className="bg-white/90 border border-stone-200/50 rounded-3xl p-6 shadow-sm space-y-5">
+                        <div className="flex items-center gap-2 border-b border-stone-100 pb-3">
+                          <span className="w-1.5 h-4 bg-[#707040] rounded-full inline-block"></span>
+                          <h4 className="text-sm font-extrabold text-stone-800 tracking-wider">五維尋茶關卡數據解析</h4>
+                        </div>
+
+                        <div className="space-y-4">
+                          {stagesData.map((stage) => {
+                            const analysis = getDimensionAnalysis(stage.id, stage.score || 5);
+                            const percent = Math.min(100, Math.max(10, (stage.score || 5) * 10));
+
+                            return (
+                              <div key={stage.id} className="space-y-2 text-left">
+                                <div className="flex items-center justify-between">
+                                  <span className="text-xs font-bold text-stone-800">{analysis.dimension}</span>
+                                  <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full border ${analysis.color}`}>
+                                    {analysis.badge} ({stage.score || 5}/10分)
+                                  </span>
                                 </div>
+                                <div className="text-[10px] text-stone-400 font-medium leading-none mb-1">
+                                  {analysis.meaning}
+                                </div>
+
+                                {/* Modern progress bar */}
+                                <div className="relative h-2.5 bg-stone-100 rounded-full overflow-hidden border border-stone-200/40">
+                                  <motion.div 
+                                    initial={{ width: 0 }}
+                                    animate={{ width: `${percent}%` }}
+                                    transition={{ duration: 1, ease: "easeOut" }}
+                                    className={`h-full rounded-full ${analysis.barColor}`}
+                                  />
+                                </div>
+                                <p className="text-[10px] text-stone-500 font-light leading-relaxed">
+                                  {analysis.detail}
+                                </p>
                               </div>
                             );
                           })}
+                        </div>
+                      </div>
+
+                      {/* C. 專屬推薦茶品與優惠 */}
+                      <div className="bg-white/90 border border-stone-200/50 rounded-3xl p-6 shadow-sm space-y-6">
+                        <div className="flex items-center gap-2 border-b border-stone-100 pb-3">
+                          <span className="w-1.5 h-4 bg-amber-500 rounded-full inline-block"></span>
+                          <h4 className="text-sm font-extrabold text-stone-800 tracking-wider">為您推薦的專屬靈魂茶品</h4>
+                        </div>
+
+                        {(() => {
+                          // Find recommended products based on cat's tea recommendation type
+                          const recommended = productsList.filter(p => {
+                            const matchesType = matchedCats.some(cat => {
+                              const soul = teaSoulDetails[cat.id];
+                              return soul && (
+                                p.category?.includes(soul.teaRecommendationType) || 
+                                p.name.includes(soul.teaRecommendationType)
+                              );
+                            });
+                            return matchesType;
+                          });
+
+                          // Fallback to first 3 products if none match
+                          const finalRecs = recommended.length > 0 ? recommended.slice(0, 3) : productsList.slice(0, 3);
+
+                          if (finalRecs.length === 0) {
+                            return (
+                              <p className="text-xs text-stone-500 font-light py-2 text-center">
+                                正在為您精選覓野好茶，請稍候...
+                              </p>
+                            );
+                          }
+
+                          return (
+                            <div className="grid grid-cols-1 gap-4">
+                              {finalRecs.map(prod => (
+                                <div key={prod.id} className="flex gap-4 p-3 bg-stone-50 rounded-2xl border border-stone-100/80 hover:border-amber-200 transition-all duration-300">
+                                  <div className="w-20 h-20 rounded-xl overflow-hidden bg-white border border-stone-100 shrink-0">
+                                    <img 
+                                      src={getImageUrl(prod.image_url)} 
+                                      alt={prod.name} 
+                                      className="w-full h-full object-cover"
+                                      referrerPolicy="no-referrer"
+                                    />
+                                  </div>
+                                  <div className="flex-1 min-w-0 flex flex-col justify-between">
+                                    <div className="space-y-0.5">
+                                      <span className="text-[9px] font-extrabold text-amber-700 bg-amber-50 border border-amber-100 px-1.5 py-0.5 rounded">
+                                        {prod.category || '精選推薦'}
+                                      </span>
+                                      <h5 className="text-xs font-bold text-stone-800 truncate mt-1">
+                                        {prod.name}
+                                      </h5>
+                                      <p className="text-[10px] text-stone-500 line-clamp-1 font-light leading-normal">
+                                        {prod.description}
+                                      </p>
+                                    </div>
+                                    <div className="flex items-center justify-between gap-2 mt-1">
+                                      <div className="flex items-baseline gap-1">
+                                        <span className="text-xs font-extrabold text-amber-700 font-mono">
+                                          NT$ {prod.price}
+                                        </span>
+                                        {prod.original_price && prod.original_price > prod.price && (
+                                          <span className="text-[9px] text-stone-400 line-through font-mono">
+                                            NT$ {prod.original_price}
+                                          </span>
+                                        )}
+                                      </div>
+                                      <a 
+                                        href={`/product/${prod.slug}`}
+                                        className="inline-flex items-center gap-1 text-[10px] bg-stone-800 hover:bg-[#707040] text-white font-bold px-3 py-1.5 rounded-lg transition"
+                                      >
+                                        立即品嚐 🍵
+                                      </a>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          );
+                        })()}
+
+                        {/* LINE/畢業禮 專屬特惠卡 */}
+                        <div className="mt-4 p-5 bg-gradient-to-br from-amber-50 to-[#FCF8F2] rounded-2xl border border-amber-200 shadow-xs relative overflow-hidden text-left">
+                          <div className="absolute right-0 top-0 translate-x-3 -translate-y-3 w-20 h-20 bg-amber-200/20 rounded-full blur-xl" />
+                          <div className="relative flex items-start gap-4">
+                            <div className="bg-amber-100 text-amber-800 rounded-xl p-2 shrink-0">
+                              <Award size={20} className="animate-pulse" />
+                            </div>
+                            <div className="space-y-1.5 flex-1 min-w-0">
+                              <h5 className="text-[10px] font-extrabold text-amber-800 tracking-wider uppercase">
+                                {config?.graduation_tag || 'VIP GRADUATION EXCLUSIVE'}
+                              </h5>
+                              <p className="text-xs md:text-sm font-extrabold text-stone-800 leading-tight">
+                                {config?.graduation_title || '恭喜通關！覓野茶 VIP 迎新限定禮'}
+                              </p>
+                              <p className="text-[11px] text-stone-600 leading-relaxed font-light">
+                                {config?.graduation_text ? renderFormattedText(config.graduation_text) : (
+                                  <>
+                                    加入 LINE 官方帳號，輸入 <span className="text-[#707040] font-bold">【新手村折價券】</span>，即可領取 <span className="text-amber-700 font-bold font-serif">【滿 500 折 50】</span> 專屬優惠折價券！
+                                  </>
+                                )}
+                              </p>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -1853,6 +2094,16 @@ export const BeginnerVillage: React.FC = () => {
 
                 {completedStages.length > 0 && (
                   <div className="max-w-md mx-auto pt-3 space-y-4">
+                    {completedStages.length > 0 && completedStages.length < 5 && (
+                      <div className="flex justify-center pb-2">
+                        <button
+                          onClick={() => setShowMidwayReview(true)}
+                          className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#707040]/10 hover:bg-[#707040]/20 text-[#707040] font-bold text-xs rounded-full border border-[#707040]/20 transition shadow-xs cursor-pointer animate-pulse"
+                        >
+                          <Eye size={12} /> 隨時回顧已完成關卡結果 ({completedStages.length}/5)
+                        </button>
+                      </div>
+                    )}
                     <div className="flex items-center justify-center gap-4 text-center">
                       {completedStages.length === 5 ? (
                         <motion.span
@@ -2061,6 +2312,17 @@ export const BeginnerVillage: React.FC = () => {
                   </p>
                 </div>
 
+                {completedStages.length > 0 && completedStages.length < 5 && (
+                  <div className="mt-4 pt-3 border-t border-stone-200/40 text-center">
+                    <button
+                      onClick={() => setShowMidwayReview(true)}
+                      className="w-full inline-flex items-center justify-center gap-1.5 text-xs bg-[#707040] hover:bg-[#5a5a31] text-white font-bold py-2.5 px-4 rounded-xl transition shadow-xs cursor-pointer active:scale-98"
+                    >
+                      <Eye size={12} /> 隨時查看已通關結果 ({completedStages.length}/5)
+                    </button>
+                  </div>
+                )}
+
                 {completedStages.length >= 5 && (
                   <div className="mt-4 text-center">
                     <button
@@ -2077,6 +2339,108 @@ export const BeginnerVillage: React.FC = () => {
 
         </AnimatePresence>
       </div>
+
+      {/* 4. MIDWAY REVIEW MODAL POPUP */}
+      <AnimatePresence>
+        {showMidwayReview && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-stone-900/60 backdrop-blur-sm"
+              onClick={() => setShowMidwayReview(false)}
+            />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-[#FCFAF7] border border-stone-200/60 rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl relative z-10 flex flex-col max-h-[85vh]"
+            >
+              <div className="p-6 border-b border-stone-100 flex items-center justify-between shrink-0">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="text-[#707040] animate-pulse" size={18} />
+                  <h3 className="text-lg font-bold text-stone-800">已完成關卡尋茶回顧</h3>
+                </div>
+                <button 
+                  onClick={() => setShowMidwayReview(false)}
+                  className="p-1.5 rounded-full hover:bg-stone-100 text-stone-400 hover:text-stone-600 transition-colors cursor-pointer"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+              
+              <div className="p-6 overflow-y-auto space-y-5 flex-1 scrollbar-thin">
+                <p className="text-xs text-stone-500 font-medium text-center">
+                  你目前已完成 {completedStages.length}/5 關卡，以下為您目前的尋茶基因解碼結果：
+                </p>
+                
+                <div className="space-y-4">
+                  {(() => {
+                    const stagesData = getStageSummaryData();
+                    const completedData = stagesData.filter(stage => completedStages.includes(stage.id));
+                    
+                    return completedData.map((stage) => {
+                      const getStageIcon = (id: string) => {
+                        switch (id) {
+                          case 'personality': return <Heart size={13} className="text-rose-500" />;
+                          case 'zodiac': return <Sparkles size={13} className="text-amber-500" />;
+                          case 'energy': return <Activity size={13} className="text-emerald-500" />;
+                          case 'lifestyle': return <Moon size={13} className="text-indigo-500" />;
+                          case 'sensory': return <Eye size={13} className="text-purple-500" />;
+                          default: return <CheckCircle2 size={13} className="text-[#707040]" />;
+                        }
+                      };
+
+                      return (
+                        <div 
+                          key={stage.id}
+                          className="bg-white p-4 rounded-2xl border border-stone-200/50 shadow-xs flex gap-4 transition-all duration-300 hover:shadow-sm"
+                          style={{ borderLeftWidth: '4px', borderLeftColor: '#707040' }}
+                        >
+                          <div className="shrink-0 w-12 h-12 rounded-xl overflow-hidden bg-stone-100 border border-stone-100">
+                            <img 
+                              src={stage.image} 
+                              alt={stage.title} 
+                              className="w-full h-full object-cover"
+                              referrerPolicy="no-referrer"
+                            />
+                          </div>
+                          <div className="space-y-1 flex-1 min-w-0">
+                            <div className="flex items-center gap-1.5">
+                              <span className="p-0.5 bg-stone-50 rounded-md inline-flex items-center justify-center">
+                                {getStageIcon(stage.id)}
+                              </span>
+                              <span className="text-[9px] font-extrabold text-[#707040] tracking-wider uppercase">
+                                {stage.name}
+                              </span>
+                            </div>
+                            <h5 className="text-xs font-bold text-stone-800">
+                              {stage.title}
+                            </h5>
+                            <p className="text-[10px] text-stone-600 leading-relaxed font-light">
+                              {stage.description}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    });
+                  })()}
+                </div>
+              </div>
+              
+              <div className="p-5 bg-stone-50 border-t border-stone-100 text-center shrink-0">
+                <button
+                  onClick={() => setShowMidwayReview(false)}
+                  className="w-full py-2.5 px-4 bg-[#707040] hover:bg-[#5c5c34] text-white font-bold text-xs tracking-wider rounded-xl transition-all shadow-sm active:scale-98 cursor-pointer"
+                >
+                  繼續完成剩餘關卡
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
