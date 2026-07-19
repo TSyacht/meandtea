@@ -95,6 +95,7 @@ const UltimateMedia: React.FC<{ imageUrl?: string; videoUrl?: string; forceUnmut
           src={videoUrl}
           poster={fallbackImage}
           autoPlay
+          loop={false}
           muted={isMuted}
           playsInline
           onError={() => setVideoError(true)}
@@ -721,7 +722,10 @@ export const BeginnerVillage: React.FC = () => {
         if (mergedCompleted.length >= 5) {
           setUserCompletedAllLevels(true);
           localStorage.setItem('user_completed_all_levels', 'true');
-          setShowUltimateScreen(true);
+          const closedUltimate = sessionStorage.getItem('miye_closed_ultimate') === 'true';
+          if (!closedUltimate) {
+            setShowUltimateScreen(true);
+          }
         }
       }
     } catch (err) {
@@ -887,7 +891,10 @@ export const BeginnerVillage: React.FC = () => {
     const completedAll = localStorage.getItem('user_completed_all_levels') === 'true';
     if (completedAll) {
       setUserCompletedAllLevels(true);
-      setShowUltimateScreen(true);
+      const closedUltimate = sessionStorage.getItem('miye_closed_ultimate') === 'true';
+      if (!closedUltimate) {
+        setShowUltimateScreen(true);
+      }
     }
 
     // Load progress from localStorage as fallback/initial
@@ -1124,6 +1131,8 @@ export const BeginnerVillage: React.FC = () => {
     localStorage.removeItem('miye_village_stage_score');
     localStorage.removeItem('user_completed_all_levels');
     sessionStorage.removeItem('miye_village_completed');
+    sessionStorage.removeItem('miye_closed_ultimate');
+    sessionStorage.removeItem('miye_has_begun_ceremony');
     setUserCompletedAllLevels(false);
     setStageResult(null);
     setShowUltimateScreen(false);
@@ -1268,7 +1277,10 @@ export const BeginnerVillage: React.FC = () => {
             >
               <div className="bg-[#707040]/10 py-8 px-6 border-b border-[#707040]/10 relative rounded-t-3xl">
                 <button
-                  onClick={() => setShowUltimateScreen(false)}
+                  onClick={() => {
+                    setShowUltimateScreen(false);
+                    sessionStorage.setItem('miye_closed_ultimate', 'true');
+                  }}
                   className="absolute right-6 top-6 text-stone-500 hover:text-stone-800 transition-colors p-1"
                   title="回到探索地圖"
                 >
@@ -1346,7 +1358,7 @@ export const BeginnerVillage: React.FC = () => {
                             onClick={() => setHasBegunCeremony(true)}
                             className="w-full py-4 px-6 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-extrabold text-sm tracking-widest rounded-2xl transition-all shadow-lg shadow-amber-500/20 hover:shadow-amber-500/30 active:scale-95 animate-bounce flex items-center justify-center gap-2 cursor-pointer border border-amber-400/20"
                           >
-                            <Play size={16} fill="currentColor" className="text-white" /> 進入開啟儀式
+                            <Play size={16} fill="currentColor" className="text-white" /> 開啟儀式獲得最終獎勵
                           </button>
                         </div>
                       </div>
@@ -1428,7 +1440,6 @@ export const BeginnerVillage: React.FC = () => {
                                           <span className="w-1.5 h-1.5 rounded-full bg-[#707040]"></span>
                                           {cat.name} · {details.tagline}
                                         </div>
-                                        <p className="font-light">{details.analysis}</p>
                                         <div className="flex flex-wrap gap-1 pt-1">
                                           {details.tags.map(tag => (
                                             <span key={tag} className="text-[9px] font-bold text-stone-500 bg-stone-100 px-2 py-0.5 rounded">
@@ -1483,24 +1494,20 @@ export const BeginnerVillage: React.FC = () => {
                                         </span>
                                       ))}
                                     </div>
-
-                                    <div className="bg-stone-50/80 border border-stone-100 p-4 rounded-2xl text-xs md:text-sm text-stone-600 leading-relaxed font-light text-left w-full">
-                                      {details.analysis}
-                                    </div>
                                   </div>
                                 );
                               })
                             )}
                           </div>
 
-                          {/* B. 五維尋茶基因解碼結果 (五關資料整合) */}
-                          <div className="bg-white border border-stone-200/50 rounded-3xl p-6 shadow-sm space-y-5">
+                          {/* B. 新手村尋茶結果 */}
+                          <div className="bg-white border border-stone-200/50 rounded-3xl p-6 shadow-sm space-y-4">
                             <div className="flex items-center gap-2 border-b border-stone-100 pb-3">
                               <span className="w-1.5 h-4 bg-[#707040] rounded-full inline-block"></span>
-                              <h4 className="text-sm font-extrabold text-stone-800 tracking-wider">五維尋茶基因解碼結果</h4>
+                              <h4 className="text-sm font-extrabold text-stone-800 tracking-wider">新手村尋茶結果</h4>
                             </div>
 
-                            <div className="space-y-4">
+                            <div className="space-y-3">
                               {stagesData.map((stage) => {
                                 let IconComponent = Heart;
                                 let iconColor = 'text-rose-500';
@@ -1512,9 +1519,10 @@ export const BeginnerVillage: React.FC = () => {
                                 return (
                                   <div 
                                     key={stage.id} 
-                                    className="bg-stone-50/50 border-l-4 border-l-[#707040] border border-stone-200/40 rounded-2xl p-4 shadow-2xs flex gap-4 text-left transition-all hover:bg-stone-50"
+                                    className="bg-stone-50/50 border border-stone-200/40 rounded-2xl p-3 shadow-2xs flex items-center gap-3 text-left transition-all hover:bg-stone-50"
                                   >
-                                    <div className="w-16 h-16 rounded-xl overflow-hidden bg-white border border-stone-100 shrink-0 shadow-xs">
+                                    {/* (結果縮圖) */}
+                                    <div className="w-10 h-10 rounded-lg overflow-hidden bg-white border border-stone-100 shrink-0 shadow-xs">
                                       <img 
                                         src={stage.image} 
                                         alt={stage.title} 
@@ -1522,48 +1530,21 @@ export const BeginnerVillage: React.FC = () => {
                                         referrerPolicy="no-referrer"
                                       />
                                     </div>
-                                    <div className="flex-1 min-w-0 space-y-0.5">
-                                      <div className="flex items-center gap-1.5 text-[10px] text-stone-400 font-bold uppercase tracking-wider">
-                                        <IconComponent size={11} className={iconColor} />
+                                    
+                                    {/* (測驗關卡) & (測驗結果) in single row */}
+                                    <div className="flex flex-1 items-center justify-between min-w-0 gap-2">
+                                      <div className="flex items-center gap-1.5 shrink-0 text-[11px] text-[#707040] font-bold uppercase tracking-wider">
+                                        <IconComponent size={12} className={iconColor} />
                                         <span>{stage.name}</span>
                                       </div>
-                                      <h5 className="text-xs font-bold text-stone-800 tracking-wide font-sans leading-snug">
+                                      
+                                      <h5 className="text-xs font-bold text-stone-800 truncate text-right max-w-[60%] leading-none">
                                         {stage.title}
                                       </h5>
-                                      <p className="text-[11px] text-stone-500 font-light leading-relaxed whitespace-pre-line">
-                                        {stage.description}
-                                      </p>
                                     </div>
                                   </div>
                                 );
                               })}
-                            </div>
-                          </div>
-
-                          {/* VIP 畢業禮專屬特惠卡 */}
-                          <div className="bg-white border border-stone-200/50 rounded-3xl p-6 shadow-sm">
-                            <div className="p-5 bg-gradient-to-br from-amber-50 to-[#FCF8F2] rounded-2xl border border-amber-200 shadow-xs relative overflow-hidden text-left">
-                              <div className="absolute right-0 top-0 translate-x-3 -translate-y-3 w-20 h-20 bg-amber-200/20 rounded-full blur-xl" />
-                              <div className="relative flex items-start gap-4">
-                                <div className="bg-amber-100 text-amber-800 rounded-xl p-2 shrink-0">
-                                  <Award size={20} className="animate-pulse" />
-                                </div>
-                                <div className="space-y-1.5 flex-1 min-w-0">
-                                  <h5 className="text-[10px] font-extrabold text-amber-800 tracking-wider uppercase">
-                                    {config?.graduation_tag || 'VIP GRADUATION EXCLUSIVE'}
-                                  </h5>
-                                  <p className="text-xs md:text-sm font-extrabold text-stone-800 leading-tight">
-                                    {config?.graduation_title || '恭喜通關！覓野茶 VIP 迎新限定禮'}
-                                  </p>
-                                  <p className="text-[11px] text-stone-600 leading-relaxed font-light">
-                                    {config?.graduation_text ? renderFormattedText(config.graduation_text) : (
-                                      <>
-                                        加入 LINE 官方帳號，輸入 <span className="text-[#707040] font-bold">【新手村折價券】</span>，即可領取 <span className="text-amber-700 font-bold font-serif">【滿 500 折 50】</span> 專屬優惠折價券！
-                                      </>
-                                    )}
-                                  </p>
-                                </div>
-                              </div>
                             </div>
                           </div>
                         </div>
@@ -1572,8 +1553,10 @@ export const BeginnerVillage: React.FC = () => {
                   </motion.div>
                 )}
 
-                {/* Download and Share components */}
-                <div className="space-y-4 max-w-md mx-auto pt-2 border-t border-stone-100">
+                {hasBegunCeremony && (
+                  <>
+                    {/* Download and Share components */}
+                    <div className="space-y-4 max-w-md mx-auto pt-2 border-t border-stone-100">
                   <div className="pt-4 space-y-2">
                     <p className="text-xs font-semibold text-stone-600 block">立即和朋友分享</p>
                     <div className="flex items-center justify-center gap-4">
@@ -1718,27 +1701,31 @@ export const BeginnerVillage: React.FC = () => {
                         </div>
                       </div>
                     )}
+                  </>
+                )}
               </div>
 
-                  <div className="pt-6 border-t border-stone-100 flex flex-col items-center gap-3">
-                    <button
-                      onClick={() => {
-                        if (window.confirm('確定要清除所有進度並重新開始測驗嗎？')) {
-                          handleRestartAll();
-                        }
-                      }}
-                      className="w-full max-w-xs bg-[#707040] hover:bg-[#5a5a31] text-white py-3 px-6 rounded-xl text-xs font-bold tracking-widest transition-all shadow-sm active:scale-97 flex items-center justify-center gap-2 uppercase"
-                    >
-                      重新開始測驗 (Restart)
-                    </button>
-                    <button
-                      onClick={() => setShowUltimateScreen(false)}
-                      className="text-stone-500 hover:text-stone-800 text-xs font-semibold underline underline-offset-4 tracking-wider"
-                    >
-                      返回新手村探索地圖
-                    </button>
-                  </div>
-                </motion.div>
+              {hasBegunCeremony && (
+                <div className="pt-6 border-t border-stone-100 flex flex-col items-center gap-3">
+                  <button
+                    onClick={() => {
+                      if (window.confirm('確定要清除所有進度並重新開始測驗嗎？')) {
+                        handleRestartAll();
+                      }
+                    }}
+                    className="w-full max-w-xs bg-[#707040] hover:bg-[#5a5a31] text-white py-3 px-6 rounded-xl text-xs font-bold tracking-widest transition-all shadow-sm active:scale-97 flex items-center justify-center gap-2 uppercase"
+                  >
+                    重新開始測驗 (Restart)
+                  </button>
+                  <button
+                    onClick={() => setShowUltimateScreen(false)}
+                    className="text-stone-500 hover:text-stone-800 text-xs font-semibold underline underline-offset-4 tracking-wider"
+                  >
+                    返回新手村探索地圖
+                  </button>
+                </div>
+              )}
+            </motion.div>
           ) : activeStageId ? (
             
             /* 2. SPECIFIC STAGE EXPERIENCE PATH */
