@@ -95,7 +95,6 @@ const UltimateMedia: React.FC<{ imageUrl?: string; videoUrl?: string; forceUnmut
           src={videoUrl}
           poster={fallbackImage}
           autoPlay
-          loop
           muted={isMuted}
           playsInline
           onError={() => setVideoError(true)}
@@ -1382,56 +1381,40 @@ export const BeginnerVillage: React.FC = () => {
                             </span>
                           </div>
 
-                          {/* A. 茶系靈魂人格 */}
-                          <div className="bg-white/90 border border-stone-200/50 rounded-3xl p-6 shadow-sm space-y-6">
-                            <div className="text-center">
-                              <span className="inline-flex items-center gap-1 text-[10px] bg-amber-500/10 text-amber-700 font-extrabold px-3 py-1 rounded-full uppercase tracking-wider">
-                                👑 最終探索成果：茶系靈魂覺醒
-                              </span>
-                              <h3 className="text-lg md:text-xl font-serif font-bold text-stone-800 mt-3 tracking-wide leading-relaxed">
-                                {matchedCats.length > 1 
-                                  ? `你最適合的茶品：${matchedCats[0]?.name || ''} 和 ${matchedCats[1]?.name || ''}`
-                                  : `你最適合的茶品：${matchedCats[0]?.name || ''}`
-                                }
-                              </h3>
+                          {/* A. 最終探索成果 */}
+                          <div className="bg-white border border-stone-200/50 rounded-3xl p-8 shadow-sm space-y-6 flex flex-col items-center text-center">
+                            {/* 1. (Icon) 最終探索成果 */}
+                            <div className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-amber-500/10 text-amber-700 font-extrabold text-[11px] rounded-full uppercase tracking-widest shadow-xs">
+                              👑 最終探索成果
                             </div>
 
-                            {matchedCats.length > 1 ? (
-                              <div className="space-y-6">
-                                {/* Side-by-side display with gap/divider */}
-                                <div className="grid grid-cols-2 gap-6 relative">
-                                  {/* vertical subtle divider line */}
-                                  <div className="absolute top-4 bottom-4 left-1/2 -translate-x-1/2 w-px bg-stone-200/60" />
+                            {/* 2. 你最適合的茶品 */}
+                            <h3 className="text-lg md:text-xl font-serif font-extrabold text-stone-800 tracking-wider">
+                              你最適合的茶品
+                            </h3>
 
-                                  {matchedCats.slice(0, 2).map((cat) => {
-                                    const details = teaSoulDetails[cat.id] || {
-                                      tagline: '清新自然、與萬物契合的靈魂尋茶者',
-                                      tags: ['熱愛自然', '和諧包容'],
-                                      element: '大地自然元素',
-                                      analysis: '您在尋茶之旅中展現出與自然和諧共處的深厚心靈特質。'
-                                    };
-                                    return (
-                                      <div key={cat.id} className="flex flex-col items-center text-center">
-                                        <div className="relative w-full aspect-square max-w-[130px] rounded-2xl overflow-hidden border-2 border-amber-400 shadow-md bg-stone-50 group mb-3">
-                                          <img 
-                                            src={cat.image} 
-                                            alt={cat.name} 
-                                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
-                                            referrerPolicy="no-referrer" 
-                                          />
-                                        </div>
-                                        <h4 className="text-sm font-extrabold text-stone-800 tracking-wide">
-                                          {cat.name}
-                                        </h4>
-                                        <span className="text-[9px] text-amber-700 font-extrabold font-mono tracking-wider mt-1 bg-amber-50 border border-amber-100 px-1.5 py-0.5 rounded">
-                                          {details.element}
-                                        </span>
+                            {/* 3. 對應茶品的頭像 & 4. 對應茶品的名稱 */}
+                            {matchedCats.length > 1 ? (
+                              <div className="w-full space-y-4">
+                                <div className="grid grid-cols-2 gap-6 max-w-sm mx-auto">
+                                  {matchedCats.slice(0, 2).map((cat) => (
+                                    <div key={cat.id} className="flex flex-col items-center">
+                                      <div className="relative w-28 h-28 rounded-2xl overflow-hidden border-2 border-amber-400 shadow-md bg-stone-50 group mb-3">
+                                        <img 
+                                          src={cat.image} 
+                                          alt={cat.name} 
+                                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
+                                          referrerPolicy="no-referrer" 
+                                        />
                                       </div>
-                                    );
-                                  })}
+                                      <h4 className="text-sm font-extrabold text-[#707040] tracking-wide">
+                                        {cat.name}
+                                      </h4>
+                                    </div>
+                                  ))}
                                 </div>
 
-                                <div className="space-y-4">
+                                <div className="space-y-4 w-full">
                                   {matchedCats.slice(0, 2).map(cat => {
                                     const details = teaSoulDetails[cat.id] || {
                                       tagline: '清新自然、與萬物契合的靈魂尋茶者',
@@ -1440,7 +1423,7 @@ export const BeginnerVillage: React.FC = () => {
                                       analysis: '您在尋茶之旅中展現出與自然和諧共處的深厚心靈特質。'
                                     };
                                     return (
-                                      <div key={`desc-${cat.id}`} className="bg-stone-50/80 border border-stone-100 p-4 rounded-2xl text-xs text-stone-600 leading-relaxed font-light text-left space-y-2">
+                                      <div key={`desc-${cat.id}`} className="bg-stone-50/85 border border-stone-100 p-4 rounded-2xl text-xs text-stone-600 leading-relaxed font-light text-left space-y-1.5">
                                         <div className="flex items-center gap-1.5 font-bold text-stone-800 text-xs border-b border-stone-200/50 pb-1.5">
                                           <span className="w-1.5 h-1.5 rounded-full bg-[#707040]"></span>
                                           {cat.name} · {details.tagline}
@@ -1467,31 +1450,33 @@ export const BeginnerVillage: React.FC = () => {
                                   analysis: '您在尋茶之旅中展現出與自然和諧共處的深厚心靈特質。您適合品嘗覓野茶精選的各式好茶，讓身心得到最極致的放鬆。'
                                 };
                                 return (
-                                  <div key={cat.id} className="space-y-4">
-                                    <div className="flex flex-col items-center">
-                                      <div className="relative w-36 h-36 rounded-2xl overflow-hidden border-2 border-amber-400 shadow-md mb-4 bg-stone-100 group">
-                                        <img 
-                                          src={cat.image} 
-                                          alt={cat.name} 
-                                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
-                                          referrerPolicy="no-referrer" 
-                                        />
-                                      </div>
-                                      <h4 className="text-xl font-bold text-stone-800 tracking-wide font-sans flex items-center gap-1.5">
-                                        {cat.name}
-                                      </h4>
-                                      <span className="text-xs text-amber-700 font-extrabold font-mono tracking-widest mt-1 bg-amber-50 border border-amber-200 px-2.5 py-0.5 rounded-md">
-                                        {details.element}
-                                      </span>
+                                  <div key={cat.id} className="w-full space-y-4 flex flex-col items-center">
+                                    {/* 3. 對應茶品的頭像 */}
+                                    <div className="relative w-36 h-36 rounded-3xl overflow-hidden border-2 border-amber-400 shadow-md bg-stone-100 group">
+                                      <img 
+                                        src={cat.image} 
+                                        alt={cat.name} 
+                                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
+                                        referrerPolicy="no-referrer" 
+                                      />
                                     </div>
+                                    
+                                    {/* 4. 對應茶品的名稱 */}
+                                    <h4 className="text-lg font-bold text-stone-800 tracking-wide font-sans">
+                                      {cat.name}
+                                    </h4>
 
-                                    <div className="text-center py-2">
+                                    <span className="text-xs text-amber-700 font-extrabold font-mono tracking-widest bg-amber-50 border border-amber-200 px-2.5 py-0.5 rounded-md">
+                                      {details.element}
+                                    </span>
+
+                                    <div className="py-1">
                                       <p className="text-sm font-bold text-stone-700 font-serif italic">
                                         「{details.tagline}」
                                       </p>
                                     </div>
 
-                                    <div className="flex flex-wrap justify-center gap-1.5 pb-2">
+                                    <div className="flex flex-wrap justify-center gap-1.5 pb-1">
                                       {details.tags.map(tag => (
                                         <span key={tag} className="text-[10px] font-bold text-stone-600 bg-stone-100 px-2.5 py-1 rounded-lg">
                                           #{tag}
@@ -1499,7 +1484,7 @@ export const BeginnerVillage: React.FC = () => {
                                       ))}
                                     </div>
 
-                                    <div className="bg-stone-50/80 border border-stone-100 p-4 rounded-2xl text-xs md:text-sm text-stone-600 leading-relaxed font-light text-left">
+                                    <div className="bg-stone-50/80 border border-stone-100 p-4 rounded-2xl text-xs md:text-sm text-stone-600 leading-relaxed font-light text-left w-full">
                                       {details.analysis}
                                     </div>
                                   </div>
@@ -1508,130 +1493,56 @@ export const BeginnerVillage: React.FC = () => {
                             )}
                           </div>
 
-                          {/* B. 五關數據的綜合解析 */}
-                          <div className="bg-white/90 border border-stone-200/50 rounded-3xl p-6 shadow-sm space-y-5">
+                          {/* B. 五維尋茶基因解碼結果 (五關資料整合) */}
+                          <div className="bg-white border border-stone-200/50 rounded-3xl p-6 shadow-sm space-y-5">
                             <div className="flex items-center gap-2 border-b border-stone-100 pb-3">
                               <span className="w-1.5 h-4 bg-[#707040] rounded-full inline-block"></span>
-                              <h4 className="text-sm font-extrabold text-stone-800 tracking-wider">五維尋茶關卡數據解析</h4>
+                              <h4 className="text-sm font-extrabold text-stone-800 tracking-wider">五維尋茶基因解碼結果</h4>
                             </div>
 
                             <div className="space-y-4">
                               {stagesData.map((stage) => {
-                                const analysis = getDimensionAnalysis(stage.id, stage.score || 5);
-                                const percent = Math.min(100, Math.max(10, (stage.score || 5) * 10));
+                                let IconComponent = Heart;
+                                let iconColor = 'text-rose-500';
+                                if (stage.id === 'zodiac') { IconComponent = Sparkles; iconColor = 'text-amber-500'; }
+                                else if (stage.id === 'energy') { IconComponent = Activity; iconColor = 'text-emerald-500'; }
+                                else if (stage.id === 'lifestyle') { IconComponent = BookOpen; iconColor = 'text-indigo-500'; }
+                                else if (stage.id === 'sensory') { IconComponent = Eye; iconColor = 'text-purple-500'; }
 
                                 return (
-                                  <div key={stage.id} className="space-y-2 text-left">
-                                    <div className="flex items-center justify-between">
-                                      <span className="text-xs font-bold text-stone-800">{analysis.dimension}</span>
-                                      <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full border ${analysis.color}`}>
-                                        {analysis.badge} ({stage.score || 5}/10分)
-                                      </span>
-                                    </div>
-                                    <div className="text-[10px] text-stone-400 font-medium leading-none mb-1">
-                                      {analysis.meaning}
-                                    </div>
-
-                                    {/* Modern progress bar */}
-                                    <div className="relative h-2.5 bg-stone-100 rounded-full overflow-hidden border border-stone-200/40">
-                                      <motion.div 
-                                        initial={{ width: 0 }}
-                                        animate={{ width: `${percent}%` }}
-                                        transition={{ duration: 1, ease: "easeOut" }}
-                                        className={`h-full rounded-full ${analysis.barColor}`}
+                                  <div 
+                                    key={stage.id} 
+                                    className="bg-stone-50/50 border-l-4 border-l-[#707040] border border-stone-200/40 rounded-2xl p-4 shadow-2xs flex gap-4 text-left transition-all hover:bg-stone-50"
+                                  >
+                                    <div className="w-16 h-16 rounded-xl overflow-hidden bg-white border border-stone-100 shrink-0 shadow-xs">
+                                      <img 
+                                        src={stage.image} 
+                                        alt={stage.title} 
+                                        className="w-full h-full object-cover"
+                                        referrerPolicy="no-referrer"
                                       />
                                     </div>
-                                    <p className="text-[10px] text-stone-500 font-light leading-relaxed">
-                                      {analysis.detail}
-                                    </p>
+                                    <div className="flex-1 min-w-0 space-y-0.5">
+                                      <div className="flex items-center gap-1.5 text-[10px] text-stone-400 font-bold uppercase tracking-wider">
+                                        <IconComponent size={11} className={iconColor} />
+                                        <span>{stage.name}</span>
+                                      </div>
+                                      <h5 className="text-xs font-bold text-stone-800 tracking-wide font-sans leading-snug">
+                                        {stage.title}
+                                      </h5>
+                                      <p className="text-[11px] text-stone-500 font-light leading-relaxed whitespace-pre-line">
+                                        {stage.description}
+                                      </p>
+                                    </div>
                                   </div>
                                 );
                               })}
                             </div>
                           </div>
 
-                          {/* C. 專屬推薦茶品與優惠 */}
-                          <div className="bg-white/90 border border-stone-200/50 rounded-3xl p-6 shadow-sm space-y-6">
-                            <div className="flex items-center gap-2 border-b border-stone-100 pb-3">
-                              <span className="w-1.5 h-4 bg-amber-500 rounded-full inline-block"></span>
-                              <h4 className="text-sm font-extrabold text-stone-800 tracking-wider">為您推薦的專屬靈魂茶品</h4>
-                            </div>
-
-                            {(() => {
-                              // Find recommended products based on cat's tea recommendation type
-                              const recommended = productsList.filter(p => {
-                                const matchesType = matchedCats.some(cat => {
-                                  const soul = teaSoulDetails[cat.id];
-                                  return soul && (
-                                    p.category?.includes(soul.teaRecommendationType) || 
-                                    p.name.includes(soul.teaRecommendationType)
-                                  );
-                                });
-                                return matchesType;
-                              });
-
-                              // Fallback to first 3 products if none match
-                              const finalRecs = recommended.length > 0 ? recommended.slice(0, 3) : productsList.slice(0, 3);
-
-                              if (finalRecs.length === 0) {
-                                  return (
-                                    <p className="text-xs text-stone-500 font-light py-2 text-center">
-                                      正在為您精選覓野好茶，請稍候...
-                                    </p>
-                                  );
-                              }
-
-                              return (
-                                <div className="grid grid-cols-1 gap-4">
-                                  {finalRecs.map(prod => (
-                                    <div key={prod.id} className="flex gap-4 p-3 bg-stone-50 rounded-2xl border border-stone-100/80 hover:border-amber-200 transition-all duration-300">
-                                      <div className="w-20 h-20 rounded-xl overflow-hidden bg-white border border-stone-100 shrink-0">
-                                        <img 
-                                          src={getImageUrl(prod.image_url)} 
-                                          alt={prod.name} 
-                                          className="w-full h-full object-cover"
-                                          referrerPolicy="no-referrer"
-                                        />
-                                      </div>
-                                      <div className="flex-1 min-w-0 flex flex-col justify-between">
-                                        <div className="space-y-0.5">
-                                          <span className="text-[9px] font-extrabold text-amber-700 bg-amber-50 border border-amber-100 px-1.5 py-0.5 rounded">
-                                            {prod.category || '精選推薦'}
-                                          </span>
-                                          <h5 className="text-xs font-bold text-stone-800 truncate mt-1">
-                                            {prod.name}
-                                          </h5>
-                                          <p className="text-[10px] text-stone-500 line-clamp-1 font-light leading-normal">
-                                            {prod.description}
-                                          </p>
-                                        </div>
-                                        <div className="flex items-center justify-between gap-2 mt-1">
-                                          <div className="flex items-baseline gap-1">
-                                            <span className="text-xs font-extrabold text-amber-700 font-mono">
-                                              NT$ {prod.price}
-                                            </span>
-                                            {prod.original_price && prod.original_price > prod.price && (
-                                              <span className="text-[9px] text-stone-400 line-through font-mono">
-                                                NT$ {prod.original_price}
-                                              </span>
-                                            )}
-                                          </div>
-                                          <a 
-                                            href={`/product/${prod.slug}`}
-                                            className="inline-flex items-center gap-1 text-[10px] bg-stone-800 hover:bg-[#707040] text-white font-bold px-3 py-1.5 rounded-lg transition"
-                                          >
-                                            立即品嚐 🍵
-                                          </a>
-                                        </div>
-                                      </div>
-                                    </div>
-                                  ))}
-                                </div>
-                              );
-                            })()}
-
-                            {/* LINE/畢業禮 專屬特惠卡 */}
-                            <div className="mt-4 p-5 bg-gradient-to-br from-amber-50 to-[#FCF8F2] rounded-2xl border border-amber-200 shadow-xs relative overflow-hidden text-left">
+                          {/* VIP 畢業禮專屬特惠卡 */}
+                          <div className="bg-white border border-stone-200/50 rounded-3xl p-6 shadow-sm">
+                            <div className="p-5 bg-gradient-to-br from-amber-50 to-[#FCF8F2] rounded-2xl border border-amber-200 shadow-xs relative overflow-hidden text-left">
                               <div className="absolute right-0 top-0 translate-x-3 -translate-y-3 w-20 h-20 bg-amber-200/20 rounded-full blur-xl" />
                               <div className="relative flex items-start gap-4">
                                 <div className="bg-amber-100 text-amber-800 rounded-xl p-2 shrink-0">
@@ -1658,6 +1569,8 @@ export const BeginnerVillage: React.FC = () => {
                         </div>
                       );
                     })()}
+                  </motion.div>
+                )}
 
                 {/* Download and Share components */}
                 <div className="space-y-4 max-w-md mx-auto pt-2 border-t border-stone-100">
@@ -1805,8 +1718,6 @@ export const BeginnerVillage: React.FC = () => {
                         </div>
                       </div>
                     )}
-                  </motion.div>
-                )}
               </div>
 
                   <div className="pt-6 border-t border-stone-100 flex flex-col items-center gap-3">
@@ -2520,7 +2431,7 @@ export const BeginnerVillage: React.FC = () => {
                 <div className="p-6 border-b border-stone-100 flex items-center justify-between shrink-0">
                   <div className="flex items-center gap-2">
                     <Sparkles className="text-[#707040] animate-pulse" size={18} />
-                    <h3 className="text-base font-bold text-stone-800">已解鎖關卡回顧</h3>
+                    <h3 className="text-base font-bold text-stone-800">{stage.name}</h3>
                   </div>
                   <button 
                     onClick={() => setSelectedReviewStageId(null)}
