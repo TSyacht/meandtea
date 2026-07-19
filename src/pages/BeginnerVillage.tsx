@@ -79,6 +79,7 @@ const ConfettiRain = () => {
 const UltimateMedia: React.FC<{ imageUrl?: string; videoUrl?: string; forceUnmuted?: boolean }> = ({ imageUrl, videoUrl, forceUnmuted }) => {
   const [videoError, setVideoError] = useState(false);
   const [isMuted, setIsMuted] = useState(!forceUnmuted);
+  const [videoReady, setVideoReady] = useState(false);
 
   useEffect(() => {
     if (forceUnmuted) {
@@ -90,16 +91,24 @@ const UltimateMedia: React.FC<{ imageUrl?: string; videoUrl?: string; forceUnmut
 
   if (videoUrl && !videoError) {
     return (
-      <div className="relative w-full h-full">
+      <div className="relative w-full h-full bg-white rounded-[2rem] overflow-hidden">
+        {/* Pure blank overlay when video is not ready */}
+        {!videoReady && (
+          <div className="absolute inset-0 bg-white z-10 rounded-[2rem]" />
+        )}
         <video
           src={videoUrl}
-          poster={fallbackImage}
           autoPlay
           loop={false}
           muted={isMuted}
           playsInline
+          onCanPlay={() => setVideoReady(true)}
+          onPlay={() => setVideoReady(true)}
+          onLoadedData={() => setVideoReady(true)}
           onError={() => setVideoError(true)}
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-102 pointer-events-none select-none touch-none"
+          className={`w-full h-full object-cover transition-all duration-500 group-hover:scale-102 pointer-events-none select-none touch-none ${
+            videoReady ? 'opacity-100' : 'opacity-0'
+          }`}
           style={{
             borderRadius: '2rem',
             willChange: 'transform',
@@ -108,17 +117,19 @@ const UltimateMedia: React.FC<{ imageUrl?: string; videoUrl?: string; forceUnmut
             WebkitBackfaceVisibility: 'hidden',
           }}
         />
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            e.preventDefault();
-            setIsMuted(!isMuted);
-          }}
-          className="absolute bottom-4 left-4 z-20 p-2.5 rounded-full bg-stone-950/60 hover:bg-stone-950/80 text-white backdrop-blur-md border border-white/20 transition-all active:scale-95 shadow-lg flex items-center justify-center cursor-pointer pointer-events-auto"
-          title={isMuted ? "播放聲音" : "靜音"}
-        >
-          {isMuted ? <VolumeX size={16} className="text-white animate-pulse" /> : <Volume2 size={16} className="text-white" />}
-        </button>
+        {videoReady && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              e.preventDefault();
+              setIsMuted(!isMuted);
+            }}
+            className="absolute bottom-4 left-4 z-20 p-2.5 rounded-full bg-stone-950/60 hover:bg-stone-950/80 text-white backdrop-blur-md border border-white/20 transition-all active:scale-95 shadow-lg flex items-center justify-center cursor-pointer pointer-events-auto"
+            title={isMuted ? "播放聲音" : "靜音"}
+          >
+            {isMuted ? <VolumeX size={16} className="text-white animate-pulse" /> : <Volume2 size={16} className="text-white" />}
+          </button>
+        )}
       </div>
     );
   }
@@ -571,6 +582,7 @@ export const BeginnerVillage: React.FC = () => {
     return sessionStorage.getItem('miye_selected_review_stage_id');
   });
   const [productsList, setProductsList] = useState<Product[]>([]);
+  const [selectedLargeImageUrl, setSelectedLargeImageUrl] = useState<string | null>(null);
 
   // sessionStorage synchronization effects
   useEffect(() => {
@@ -1425,41 +1437,9 @@ export const BeginnerVillage: React.FC = () => {
                                     </div>
                                   ))}
                                 </div>
-
-                                <div className="space-y-4 w-full">
-                                  {matchedCats.slice(0, 2).map(cat => {
-                                    const details = teaSoulDetails[cat.id] || {
-                                      tagline: '清新自然、與萬物契合的靈魂尋茶者',
-                                      tags: ['熱愛自然', '和諧包容'],
-                                      element: '大地自然元素',
-                                      analysis: '您在尋茶之旅中展現出與自然和諧共處的深厚心靈特質。'
-                                    };
-                                    return (
-                                      <div key={`desc-${cat.id}`} className="bg-stone-50/85 border border-stone-100 p-4 rounded-2xl text-xs text-stone-600 leading-relaxed font-light text-left space-y-1.5">
-                                        <div className="flex items-center gap-1.5 font-bold text-stone-800 text-xs border-b border-stone-200/50 pb-1.5">
-                                          <span className="w-1.5 h-1.5 rounded-full bg-[#707040]"></span>
-                                          {cat.name} · {details.tagline}
-                                        </div>
-                                        <div className="flex flex-wrap gap-1 pt-1">
-                                          {details.tags.map(tag => (
-                                            <span key={tag} className="text-[9px] font-bold text-stone-500 bg-stone-100 px-2 py-0.5 rounded">
-                                              #{tag}
-                                            </span>
-                                          ))}
-                                        </div>
-                                      </div>
-                                    );
-                                  })}
-                                </div>
                               </div>
                             ) : (
                               matchedCats.map(cat => {
-                                const details = teaSoulDetails[cat.id] || {
-                                  tagline: '清新自然、與萬物契合的靈魂尋茶者',
-                                  tags: ['熱愛自然', '和諧包容'],
-                                  element: '大地自然元素',
-                                  analysis: '您在尋茶之旅中展現出與自然和諧共處的深厚心靈特質。您適合品嘗覓野茶精選的各式好茶，讓身心得到最極致的放鬆。'
-                                };
                                 return (
                                   <div key={cat.id} className="w-full space-y-4 flex flex-col items-center">
                                     {/* 3. 對應茶品的頭像 */}
@@ -1476,24 +1456,6 @@ export const BeginnerVillage: React.FC = () => {
                                     <h4 className="text-lg font-bold text-stone-800 tracking-wide font-sans">
                                       {cat.name}
                                     </h4>
-
-                                    <span className="text-xs text-amber-700 font-extrabold font-mono tracking-widest bg-amber-50 border border-amber-200 px-2.5 py-0.5 rounded-md">
-                                      {details.element}
-                                    </span>
-
-                                    <div className="py-1">
-                                      <p className="text-sm font-bold text-stone-700 font-serif italic">
-                                        「{details.tagline}」
-                                      </p>
-                                    </div>
-
-                                    <div className="flex flex-wrap justify-center gap-1.5 pb-1">
-                                      {details.tags.map(tag => (
-                                        <span key={tag} className="text-[10px] font-bold text-stone-600 bg-stone-100 px-2.5 py-1 rounded-lg">
-                                          #{tag}
-                                        </span>
-                                      ))}
-                                    </div>
                                   </div>
                                 );
                               })
@@ -1522,23 +1484,30 @@ export const BeginnerVillage: React.FC = () => {
                                     className="bg-stone-50/50 border border-stone-200/40 rounded-2xl p-3 shadow-2xs flex items-center gap-3 text-left transition-all hover:bg-stone-50"
                                   >
                                     {/* (結果縮圖) */}
-                                    <div className="w-10 h-10 rounded-lg overflow-hidden bg-white border border-stone-100 shrink-0 shadow-xs">
+                                    <div 
+                                      onClick={() => setSelectedLargeImageUrl(stage.image)}
+                                      className="w-10 h-10 rounded-lg overflow-hidden bg-white border border-stone-100 shrink-0 shadow-xs cursor-pointer hover:ring-2 hover:ring-amber-400 active:scale-95 transition-all group/thumb relative"
+                                      title="點擊放大此高畫質結果圖卡"
+                                    >
                                       <img 
                                         src={stage.image} 
                                         alt={stage.title} 
-                                        className="w-full h-full object-cover"
+                                        className="w-full h-full object-cover group-hover/thumb:scale-105 transition-transform"
                                         referrerPolicy="no-referrer"
                                       />
+                                      <div className="absolute inset-0 bg-black/15 opacity-0 group-hover/thumb:opacity-100 transition-opacity flex items-center justify-center">
+                                        <Sparkles size={12} className="text-white drop-shadow-md" />
+                                      </div>
                                     </div>
                                     
                                     {/* (測驗關卡) & (測驗結果) in single row */}
-                                    <div className="flex flex-1 items-center justify-between min-w-0 gap-2">
+                                    <div className="flex flex-1 items-center justify-between min-w-0 gap-3">
                                       <div className="flex items-center gap-1.5 shrink-0 text-[11px] text-[#707040] font-bold uppercase tracking-wider">
                                         <IconComponent size={12} className={iconColor} />
                                         <span>{stage.name}</span>
                                       </div>
                                       
-                                      <h5 className="text-xs font-bold text-stone-800 truncate text-right max-w-[60%] leading-none">
+                                      <h5 className="text-xs font-bold text-stone-800 truncate text-right min-w-0 flex-1 leading-none">
                                         {stage.title}
                                       </h5>
                                     </div>
@@ -2464,6 +2433,45 @@ export const BeginnerVillage: React.FC = () => {
             </div>
           );
         })()}
+
+        {selectedLargeImageUrl && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-stone-950/85 backdrop-blur-md"
+              onClick={() => setSelectedLargeImageUrl(null)}
+            />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="relative bg-[#FCFAF7] border border-stone-200/60 rounded-3xl overflow-hidden shadow-2xl z-10 max-w-sm md:max-w-md w-full flex flex-col p-5"
+            >
+              <div className="flex justify-between items-center mb-4">
+                <span className="text-xs text-stone-500 font-bold tracking-wider font-sans">尋茶大圖預覽 (High Quality Image)</span>
+                <button 
+                  onClick={() => setSelectedLargeImageUrl(null)}
+                  className="p-1.5 rounded-full hover:bg-stone-100 text-stone-400 hover:text-stone-600 transition-colors cursor-pointer shadow-xs active:scale-90"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+              <div className="relative aspect-square w-full rounded-2xl overflow-hidden bg-stone-100 border border-stone-200/50 shadow-inner group">
+                <img 
+                  src={selectedLargeImageUrl} 
+                  alt="尋茶結果高畫質大圖" 
+                  className="w-full h-full object-cover select-none pointer-events-auto"
+                  referrerPolicy="no-referrer"
+                />
+              </div>
+              <div className="text-center mt-4">
+                <p className="text-[11px] text-stone-500 font-medium leading-relaxed">長按大圖或使用手機截圖，即可保存並分享您的獨特茶緣與茶品 🍵</p>
+              </div>
+            </motion.div>
+          </div>
+        )}
       </AnimatePresence>
     </div>
   );
