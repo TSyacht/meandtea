@@ -34,6 +34,7 @@ import { supabase, supabaseUrl } from '../db';
 import { useAuth } from '../AuthContext';
 import { getSettings } from '../services/settingsService';
 import { getAvatarUrl, getProducts, Product, getImageUrl } from '../services/productService';
+import { Link } from 'react-router-dom';
 
 // Confetti Component for celebration
 const ConfettiRain = () => {
@@ -1404,6 +1405,13 @@ export const BeginnerVillage: React.FC = () => {
                     {(() => {
                       const stagesData = getStageSummaryData();
                       const matchedCats = getMatchedTeaCats(stagesData);
+                      const catProductSlugs: Record<string, string> = {
+                        black_cat: 'spring-black-tea-cat',
+                        spring_water_cat: 'honey-summer-tea-cat',
+                        orange_cat: 'sweet-oolong-tea-cat',
+                        tabby_cat: 'fresh-green-tea-cat',
+                        calico_cat: 'relax-gaba-tea-cat'
+                      };
 
                       return (
                         <div id="result-summary-container" className="space-y-8 text-left max-w-md mx-auto pt-6 border-t border-stone-100">
@@ -1434,35 +1442,51 @@ export const BeginnerVillage: React.FC = () => {
                             {matchedCats.length > 1 ? (
                               <div className="w-full space-y-4">
                                 <div className="grid grid-cols-2 gap-6 max-w-sm mx-auto">
-                                  {matchedCats.slice(0, 2).map((cat) => (
-                                    <div key={cat.id} className="flex flex-col items-center">
-                                      <div className="relative w-28 h-28 rounded-2xl overflow-hidden border-2 border-amber-400 shadow-md bg-stone-50 group mb-3">
-                                        <img 
-                                          src={cat.image} 
-                                          alt={cat.name} 
-                                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
-                                          referrerPolicy="no-referrer" 
-                                        />
+                                  {matchedCats.slice(0, 2).map((cat) => {
+                                    const slug = catProductSlugs[cat.id] || '';
+                                    return (
+                                      <div key={cat.id} className="flex flex-col items-center">
+                                        <div className="relative w-28 h-28 rounded-2xl overflow-hidden border-2 border-amber-400 shadow-md bg-stone-50 group mb-3 z-10">
+                                          <Link 
+                                            to={`/product/${slug}`}
+                                            className="block w-full h-full cursor-pointer relative z-20"
+                                            title={`點擊查看 ${cat.name} 商品頁`}
+                                          >
+                                            <img 
+                                              src={cat.image} 
+                                              alt={cat.name} 
+                                              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 pointer-events-auto" 
+                                              referrerPolicy="no-referrer" 
+                                            />
+                                          </Link>
+                                        </div>
+                                        <h4 className="text-sm font-extrabold text-[#707040] tracking-wide">
+                                          {cat.name}
+                                        </h4>
                                       </div>
-                                      <h4 className="text-sm font-extrabold text-[#707040] tracking-wide">
-                                        {cat.name}
-                                      </h4>
-                                    </div>
-                                  ))}
+                                    );
+                                  })}
                                 </div>
                               </div>
                             ) : (
                               matchedCats.map(cat => {
+                                const slug = catProductSlugs[cat.id] || '';
                                 return (
                                   <div key={cat.id} className="w-full space-y-4 flex flex-col items-center">
                                     {/* 3. 對應茶品的頭像 */}
-                                    <div className="relative w-36 h-36 rounded-3xl overflow-hidden border-2 border-amber-400 shadow-md bg-stone-100 group">
-                                      <img 
-                                        src={cat.image} 
-                                        alt={cat.name} 
-                                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
-                                        referrerPolicy="no-referrer" 
-                                      />
+                                    <div className="relative w-36 h-36 rounded-3xl overflow-hidden border-2 border-amber-400 shadow-md bg-stone-100 group z-10">
+                                      <Link 
+                                        to={`/product/${slug}`}
+                                        className="block w-full h-full cursor-pointer relative z-20"
+                                        title={`點擊查看 ${cat.name} 商品頁`}
+                                      >
+                                        <img 
+                                          src={cat.image} 
+                                          alt={cat.name} 
+                                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 pointer-events-auto" 
+                                          referrerPolicy="no-referrer" 
+                                        />
+                                      </Link>
                                     </div>
                                     
                                     {/* 4. 對應茶品的名稱 */}
