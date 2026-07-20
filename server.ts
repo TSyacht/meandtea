@@ -816,6 +816,104 @@ app.use(express.json());
     }
   });
 
+  // Get temp_test_results for a visitor (by session_id) or a member (by user_id)
+  app.get('/api/temp-test-results', async (req, res) => {
+    try {
+      const { session_id, user_id } = req.query;
+      let record: any = null;
+
+      if (session_id) {
+        const { data, error } = await supabase
+          .from('temp_test_results')
+          .select('*')
+          .eq('session_id', session_id)
+          .order('created_at', { ascending: false })
+          .limit(1);
+
+        if (!error && data && data.length > 0) {
+          record = data[0];
+        }
+      }
+
+      if (!record && user_id) {
+        const { data, error } = await supabase
+          .from('temp_test_results')
+          .select('*')
+          .eq('test_data->>user_id', user_id)
+          .order('created_at', { ascending: false })
+          .limit(1);
+
+        if (!error && data && data.length > 0) {
+          record = data[0];
+        }
+      }
+
+      res.json(record || null);
+    } catch (error: any) {
+      console.error('Server error fetching temp test results:', error);
+      res.status(500).json({ error: error.message || 'Internal Server Error' });
+    }
+  });
+
+  // Post/Upsert temp_test_results
+  app.post('/api/temp-test-results', async (req, res) => {
+    try {
+      const { id, session_id, test_data } = req.body;
+      
+      let resultData: any = null;
+
+      if (id) {
+        // Update existing record
+        const { data, error } = await supabase
+          .from('temp_test_results')
+          .update({
+            session_id: session_id || null,
+            test_data,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', id)
+          .select();
+        
+        if (error) throw error;
+        resultData = data?.[0] || null;
+      } else {
+        // Insert new record
+        const { data, error } = await supabase
+          .from('temp_test_results')
+          .insert([{
+            session_id: session_id || null,
+            test_data
+          }])
+          .select();
+        
+        if (error) throw error;
+        resultData = data?.[0] || null;
+      }
+
+      res.json(resultData);
+    } catch (error: any) {
+      console.error('Server error saving temp test results:', error);
+      res.status(500).json({ error: error.message || 'Internal Server Error' });
+    }
+  });
+
+  // Delete temp_test_results
+  app.delete('/api/temp-test-results/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { error } = await supabase
+        .from('temp_test_results')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error('Server error deleting temp test results:', error);
+      res.status(500).json({ error: error.message || 'Internal Server Error' });
+    }
+  });
+
   // Vite middleware for development
   if (process.env.NODE_ENV !== 'production') {
     const { createServer: createViteServer } = await import('vite');

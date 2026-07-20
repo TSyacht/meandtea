@@ -5,6 +5,44 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>覓野茶 | 探索茶的過程就是找回自己的旅程</title>
 
+    <!-- Vite HMR WebSocket connection shield script to prevent infinite reloads in container preview -->
+    <script>
+      (function() {
+        const OriginalWebSocket = window.WebSocket;
+        if (OriginalWebSocket) {
+          window.WebSocket = function(url, protocols) {
+            if (typeof url === 'string' && (url.includes('vite') || url.includes('hmr') || url.includes('ws://') || url.includes('wss://'))) {
+              console.log('[Vite WS Shield] Intercepting HMR WebSocket connection to prevent infinite reloads:', url);
+              // Return a mock WebSocket object that gracefully behaves like it is connecting but never fails/closes
+              return {
+                readyState: 0, // CONNECTING
+                addEventListener: function(event, callback) {
+                  // No-op
+                },
+                removeEventListener: function(event, callback) {
+                  // No-op
+                },
+                send: function(data) {
+                  // No-op
+                },
+                close: function() {
+                  // No-op
+                },
+              };
+            }
+            try {
+              return new OriginalWebSocket(url, protocols);
+            } catch (e) {
+              return new OriginalWebSocket(url);
+            }
+          };
+          window.WebSocket.prototype = OriginalWebSocket.prototype;
+          // Maintain compatibility with check for native WebSocket
+          Object.defineProperty(window.WebSocket, 'name', { value: 'WebSocket' });
+        }
+      })();
+    </script>
+
     <!-- Cache-Control Meta Tags to help force crawler refresh -->
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
     <meta http-equiv="Pragma" content="no-cache" />

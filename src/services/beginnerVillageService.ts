@@ -437,3 +437,89 @@ export const recordOptionClick = async (stageId: string, questionId: string, opt
     return null;
   }
 };
+
+export const fetchTempTestResults = async (
+  sessionId?: string | null,
+  userId?: string | null,
+  retryCount = 3,
+  delayMs = 1000
+): Promise<any> => {
+  const url = new URL('/api/temp-test-results', window.location.origin);
+  if (sessionId) url.searchParams.append('session_id', sessionId);
+  if (userId) url.searchParams.append('user_id', userId);
+
+  for (let attempt = 0; attempt < retryCount; attempt++) {
+    try {
+      const response = await fetch(url.toString(), {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'Cache-Control': 'no-cache'
+        }
+      });
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return await response.json();
+    } catch (err) {
+      console.warn(`[fetchTempTestResults] Attempt ${attempt + 1} failed:`, err);
+      if (attempt === retryCount - 1) {
+        throw err;
+      }
+      await new Promise(resolve => setTimeout(resolve, delayMs * Math.pow(2, attempt)));
+    }
+  }
+};
+
+export const saveTempTestResults = async (
+  payload: { id?: string; session_id?: string | null; test_data: any },
+  retryCount = 3,
+  delayMs = 1000
+): Promise<any> => {
+  for (let attempt = 0; attempt < retryCount; attempt++) {
+    try {
+      const response = await fetch('/api/temp-test-results', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload)
+      });
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return await response.json();
+    } catch (err) {
+      console.warn(`[saveTempTestResults] Attempt ${attempt + 1} failed:`, err);
+      if (attempt === retryCount - 1) {
+        throw err;
+      }
+      await new Promise(resolve => setTimeout(resolve, delayMs * Math.pow(2, attempt)));
+    }
+  }
+};
+
+export const deleteTempTestResults = async (
+  id: string,
+  retryCount = 3,
+  delayMs = 1000
+): Promise<any> => {
+  for (let attempt = 0; attempt < retryCount; attempt++) {
+    try {
+      const response = await fetch(`/api/temp-test-results/${id}`, {
+        method: 'DELETE'
+      });
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return await response.json();
+    } catch (err) {
+      console.warn(`[deleteTempTestResults] Attempt ${attempt + 1} failed:`, err);
+      if (attempt === retryCount - 1) {
+        throw err;
+      }
+      await new Promise(resolve => setTimeout(resolve, delayMs * Math.pow(2, attempt)));
+    }
+  }
+};
+

@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from './db';
 import { Session, User } from '@supabase/supabase-js';
 import toast from 'react-hot-toast';
+import { fetchTempTestResults, saveTempTestResults, deleteTempTestResults } from './services/beginnerVillageService';
 
 interface Profile {
   id: string;
@@ -102,37 +103,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const mergeTempResults = async (realUserId: string, tempSessionId: string) => {
       try {
-        const { data: tempRows, error: tempError } = await supabase
-          .from('temp_test_results')
-          .select('*')
-          .eq('session_id', tempSessionId);
+        const tempRecord = await fetchTempTestResults(tempSessionId, null);
 
-        if (tempError) {
-          console.error('Error fetching temp results for merge:', tempError);
+        if (!tempRecord) {
           return;
         }
 
-        if (!tempRows || tempRows.length === 0) {
-          return;
-        }
-
-        const tempRecord = tempRows[0];
         const tempTestData = tempRecord.test_data || {};
 
         // Fetch user's existing record
-        const { data: userRows, error: userError } = await supabase
-          .from('temp_test_results')
-          .select('*')
-          .eq('test_data->>user_id', realUserId);
+        const userRecord = await fetchTempTestResults(null, realUserId);
 
-        if (userError) {
-          console.error('Error fetching user results for merge:', userError);
-          return;
-        }
-
-        if (userRows && userRows.length > 0) {
+        if (userRecord) {
           // Merge temp results into existing user record
-          const userRecord = userRows[0];
           const userTestData = userRecord.test_data || {};
 
           const mergedStageScores = {
@@ -155,24 +138,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             cat_type: catType
           };
 
-          const { error: updateError } = await supabase
-            .from('temp_test_results')
-            .update({
-              test_data: mergedTestData,
-              session_id: null
-            })
-            .eq('id', userRecord.id);
+          await saveTempTestResults({
+            id: userRecord.id,
+            session_id: null,
+            test_data: mergedTestData
+          });
 
-          if (!updateError) {
-            console.log('Merged temp results into existing user record successfully.');
-            // Clean up temporary record
-            await supabase
-              .from('temp_test_results')
-              .delete()
-              .eq('id', tempRecord.id);
-          } else {
-            console.error('Merge update failed:', updateError.message);
-          }
+          console.log('Merged temp results into existing user record successfully.');
+          
+          // Clean up temporary record
+          await deleteTempTestResults(tempRecord.id);
         } else {
           // No existing record for user, update temporary record's user_id and nullify session_id
           const updatedTestData = {
@@ -180,19 +155,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             user_id: realUserId
           };
 
-          const { error: updateError } = await supabase
-            .from('temp_test_results')
-            .update({
-              test_data: updatedTestData,
-              session_id: null
-            })
-            .eq('id', tempRecord.id);
+          await saveTempTestResults({
+            id: tempRecord.id,
+            session_id: null,
+            test_data: updatedTestData
+          });
 
-          if (!updateError) {
-            console.log('Assigned temp results to user successfully.');
-          } else {
-            console.error('Assigning temp results failed:', updateError.message);
-          }
+          console.log('Assigned temp results to user successfully.');
         }
 
         // Clear local session ID to prevent redundant merge attempts

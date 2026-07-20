@@ -5,7 +5,9 @@ import {
   recordOptionClick, 
   BeginnerVillageConfig, 
   VillageStage, 
-  Question 
+  Question,
+  fetchTempTestResults,
+  saveTempTestResults
 } from '../services/beginnerVillageService';
 import { 
   Compass, 
@@ -80,6 +82,8 @@ const UltimateMedia: React.FC<{ imageUrl?: string; videoUrl?: string; forceUnmut
   const [videoError, setVideoError] = useState(false);
   const [isMuted, setIsMuted] = useState(!forceUnmuted);
   const [videoReady, setVideoReady] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const videoRef = React.useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
     if (forceUnmuted) {
@@ -87,7 +91,7 @@ const UltimateMedia: React.FC<{ imageUrl?: string; videoUrl?: string; forceUnmut
     }
   }, [forceUnmuted]);
 
-  const fallbackImage = imageUrl || 'https://images.unsplash.com/photo-1597481499750-3e6b22637e12?auto=format&fit=crop&w=1000&q=90';
+  const fallbackImage = imageUrl || '';
 
   if (videoUrl && !videoError) {
     return (
@@ -97,13 +101,19 @@ const UltimateMedia: React.FC<{ imageUrl?: string; videoUrl?: string; forceUnmut
           <div className="absolute inset-0 bg-white z-10 rounded-[2rem]" />
         )}
         <video
+          ref={videoRef}
           src={videoUrl}
           autoPlay
           loop={false}
           muted={isMuted}
           playsInline
           onCanPlay={() => setVideoReady(true)}
-          onPlay={() => setVideoReady(true)}
+          onPlay={() => {
+            setVideoReady(true);
+            setIsPlaying(true);
+          }}
+          onPause={() => setIsPlaying(false)}
+          onEnded={() => setIsPlaying(false)}
           onLoadedData={() => setVideoReady(true)}
           onError={() => setVideoError(true)}
           className={`w-full h-full object-cover transition-all duration-500 group-hover:scale-102 pointer-events-none select-none touch-none ${
@@ -118,20 +128,57 @@ const UltimateMedia: React.FC<{ imageUrl?: string; videoUrl?: string; forceUnmut
           }}
         />
         {videoReady && (
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              e.preventDefault();
-              setIsMuted(!isMuted);
-            }}
-            className="absolute bottom-4 left-4 z-20 p-2.5 rounded-full bg-stone-950/60 hover:bg-stone-950/80 text-white backdrop-blur-md border border-white/20 transition-all active:scale-95 shadow-lg flex items-center justify-center cursor-pointer pointer-events-auto"
-            title={isMuted ? "播放聲音" : "靜音"}
-          >
-            {isMuted ? <VolumeX size={16} className="text-white animate-pulse" /> : <Volume2 size={16} className="text-white" />}
-          </button>
+          <div className="absolute bottom-4 left-4 z-20 flex items-center gap-2 cursor-pointer pointer-events-auto">
+            {/* Play/Stop button */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                if (videoRef.current) {
+                  if (isPlaying) {
+                    videoRef.current.pause();
+                    videoRef.current.currentTime = 0;
+                    setIsPlaying(false);
+                  } else {
+                    videoRef.current.currentTime = 0;
+                    videoRef.current.play().then(() => {
+                      setIsPlaying(true);
+                    }).catch(err => console.error("Playback failed:", err));
+                  }
+                }
+              }}
+              className="p-2.5 rounded-full bg-stone-950/60 hover:bg-stone-950/80 text-white backdrop-blur-md border border-white/20 transition-all active:scale-95 shadow-lg flex items-center justify-center cursor-pointer"
+              title={isPlaying ? "停止播放" : "重新播放"}
+            >
+              {isPlaying ? (
+                // Stop icon (Square)
+                <div className="w-3 h-3 bg-white rounded-sm" />
+              ) : (
+                // Play icon
+                <Play size={14} fill="currentColor" className="text-white" />
+              )}
+            </button>
+
+            {/* Muted/Unmuted button */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                setIsMuted(!isMuted);
+              }}
+              className="p-2.5 rounded-full bg-stone-950/60 hover:bg-stone-950/80 text-white backdrop-blur-md border border-white/20 transition-all active:scale-95 shadow-lg flex items-center justify-center cursor-pointer"
+              title={isMuted ? "播放聲音" : "靜音"}
+            >
+              {isMuted ? <VolumeX size={14} className="text-white animate-pulse" /> : <Volume2 size={14} className="text-white" />}
+            </button>
+          </div>
         )}
       </div>
     );
+  }
+
+  if (!fallbackImage) {
+    return <div className="w-full h-full bg-white rounded-[2rem]" />;
   }
 
   return (
@@ -656,30 +703,11 @@ export const BeginnerVillage: React.FC = () => {
     let record: any = null;
 
     try {
-      if (sessionId) {
-        const { data, error } = await supabase
-          .from('temp_test_results')
-          .select('*')
-          .eq('session_id', sessionId)
-          .order('created_at', { ascending: false })
-          .limit(1);
-
-        if (!error && data && data.length > 0) {
-          record = data[0];
-        }
+      if (userId) {
+        record = await fetchTempTestResults(null, userId);
       }
-
-      if (!record && userId) {
-        const { data, error } = await supabase
-          .from('temp_test_results')
-          .select('*')
-          .eq('test_data->>user_id', userId)
-          .order('created_at', { ascending: false })
-          .limit(1);
-
-        if (!error && data && data.length > 0) {
-          record = data[0];
-        }
+      if (!record && sessionId) {
+        record = await fetchTempTestResults(sessionId, null);
       }
 
       if (record && record.test_data) {
@@ -759,29 +787,10 @@ export const BeginnerVillage: React.FC = () => {
 
     try {
       if (userId) {
-        const { data } = await supabase
-          .from('temp_test_results')
-          .select('*')
-          .eq('test_data->>user_id', userId)
-          .order('created_at', { ascending: false })
-          .limit(1);
-        
-        if (data && data.length > 0) {
-          existingRow = data[0];
-        }
+        existingRow = await fetchTempTestResults(null, userId);
       }
-
       if (!existingRow && sessionId) {
-        const { data } = await supabase
-          .from('temp_test_results')
-          .select('*')
-          .eq('session_id', sessionId)
-          .order('created_at', { ascending: false })
-          .limit(1);
-
-        if (data && data.length > 0) {
-          existingRow = data[0];
-        }
+        existingRow = await fetchTempTestResults(sessionId, null);
       }
     } catch (err) {
       console.error('Error finding existing test result:', err);
@@ -830,22 +839,11 @@ export const BeginnerVillage: React.FC = () => {
     currentTestData.cat_type = primaryCat;
 
     try {
-      if (existingRow) {
-        await supabase
-          .from('temp_test_results')
-          .update({
-            test_data: currentTestData,
-            session_id: userId ? null : sessionId
-          })
-          .eq('id', existingRow.id);
-      } else {
-        await supabase
-          .from('temp_test_results')
-          .insert([{
-            session_id: userId ? null : sessionId,
-            test_data: currentTestData
-          }]);
-      }
+      await saveTempTestResults({
+        id: existingRow?.id,
+        session_id: userId ? null : sessionId,
+        test_data: currentTestData
+      });
     } catch (err) {
       console.error('Error saving temp test result:', err);
     }
@@ -1367,7 +1365,10 @@ export const BeginnerVillage: React.FC = () => {
 
                         <div className="w-full max-w-xs mx-auto pb-4 relative z-10">
                           <button
-                            onClick={() => setHasBegunCeremony(true)}
+                            onClick={() => {
+                              setHasBegunCeremony(true);
+                              window.scrollTo({ top: 0, behavior: 'smooth' });
+                            }}
                             className="w-full py-4 px-6 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-extrabold text-sm tracking-widest rounded-2xl transition-all shadow-lg shadow-amber-500/20 hover:shadow-amber-500/30 active:scale-95 animate-bounce flex items-center justify-center gap-2 cursor-pointer border border-amber-400/20"
                           >
                             <Play size={16} fill="currentColor" className="text-white" /> 開啟儀式獲得最終獎勵
