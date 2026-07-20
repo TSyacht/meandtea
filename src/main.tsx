@@ -5,6 +5,24 @@ import './index.css';
 
 console.log('main.tsx running - 2026-05-15 01:25');
 
+// Force scroll restoration to manual so the browser never attempts to auto-restore scroll position on reload/refresh
+if (typeof window !== 'undefined' && 'scrollRestoration' in window.history) {
+  window.history.scrollRestoration = 'manual';
+}
+
+// Force scroll to top immediately on script execution to ensure the viewport starts at the exact top
+if (typeof window !== 'undefined') {
+  window.scrollTo(0, 0);
+  if (document.documentElement) {
+    document.documentElement.scrollTop = 0;
+    document.documentElement.style.scrollBehavior = 'auto';
+  }
+  if (document.body) {
+    document.body.scrollTop = 0;
+    document.body.style.scrollBehavior = 'auto';
+  }
+}
+
 // Catch Vite dynamic import / preload failures and log/prevent reload loop
 const safeReload = (reason: string) => {
   console.warn(`[Reload Suppressed] Suppressed automatic page reload for stability. Reason: ${reason}`);

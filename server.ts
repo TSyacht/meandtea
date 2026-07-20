@@ -925,7 +925,15 @@ app.use(express.json());
     app.use(vite.middlewares);
     
     // Serve raw source files for source maps in development
-    app.use('/src', express.static(path.resolve(process.cwd(), 'src')));
+    app.get('/src/*', (req, res, next) => {
+      const relativePath = req.params[0];
+      const filePath = path.resolve(process.cwd(), 'src', relativePath);
+      if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
+        res.setHeader('Content-Type', 'text/plain');
+        return res.sendFile(filePath);
+      }
+      next();
+    });
     
     app.get('*', async (req, res, next) => {
       const url = req.originalUrl;
@@ -979,7 +987,15 @@ app.use(express.json());
   } else {
     const distPath = path.resolve(process.cwd(), 'dist');
     // Serve raw source files for source maps in production to prevent 404s
-    app.use('/src', express.static(path.resolve(process.cwd(), 'src')));
+    app.get('/src/*', (req, res, next) => {
+      const relativePath = req.params[0];
+      const filePath = path.resolve(process.cwd(), 'src', relativePath);
+      if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
+        res.setHeader('Content-Type', 'text/plain');
+        return res.sendFile(filePath);
+      }
+      next();
+    });
 
     app.use(express.static(distPath, {
       index: false,

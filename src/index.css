@@ -24,6 +24,9 @@
 }
 
 @layer base {
+  html, body {
+    scroll-behavior: auto !important;
+  }
   body {
     @apply bg-zen-cream text-zen-ink font-sans;
   }

@@ -72,38 +72,42 @@ export const Home: React.FC = () => {
     <Heart className="w-8 h-8 text-[#707040]" />,
   ];
 
+  const defaultPhilosophy = [
+    { title: '自然農法', desc: '我們堅持無農藥、無化肥的友善耕作，讓茶樹與自然和諧共生。', image_url: '' },
+    { title: '手作工藝', desc: '傳承古法製茶工藝，由經驗豐富的茶師親手揉捻與焙火，保留茶葉最純粹的甘甜。', image_url: '' },
+    { title: '人貓共處', desc: '茶園是店長貓咪的巡邏地，我們打造人貓和諧共處的溫馨茶室，分享美好生活。', image_url: '' }
+  ];
+
+  const philosophyItems = settings?.philosophy && settings.philosophy.length > 0
+    ? settings.philosophy
+    : defaultPhilosophy;
+
   return (
     <div className="bg-[#F9F8F4] min-h-screen">
       {/* Hero Section */}
       <section 
-        className={`relative flex flex-col items-center text-center px-6 overflow-hidden justify-center transition-all duration-1000 ease-out ${
-          isBannerReady 
-            ? 'py-48 min-h-[85vh] opacity-100' 
-            : 'py-0 min-h-0 h-0 opacity-0 pointer-events-none'
-        }`}
+        className="relative flex flex-col items-center text-center px-6 overflow-hidden justify-center py-48 min-h-[85vh] opacity-100 bg-[#EFECE6] w-full"
       >
         {/* Background Image & Overlay */}
-        {isBannerReady && (
-          <div className="absolute inset-0 z-0">
-            {imageSrc && (
-              <div className="w-full h-full relative">
-                <img 
-                  src={imageSrc} 
-                  alt="Banner" 
-                  className="w-full h-full object-cover"
-                  referrerPolicy="no-referrer"
-                />
-                <div className="absolute inset-0 bg-white/40 backdrop-blur-[2px]"></div>
-                <div className="absolute inset-0 bg-gradient-to-b from-white/10 via-transparent to-[#F9F8F4]"></div>
-              </div>
-            )}
-          </div>
-        )}
+        <div className="absolute inset-0 z-0 bg-[#EFECE6]">
+          {imageSrc && (
+            <div className="w-full h-full relative transition-opacity duration-700 ease-in-out opacity-100">
+              <img 
+                src={imageSrc} 
+                alt="Banner" 
+                className="w-full h-full object-cover"
+                referrerPolicy="no-referrer"
+              />
+              <div className="absolute inset-0 bg-white/40 backdrop-blur-[2px]"></div>
+              <div className="absolute inset-0 bg-gradient-to-b from-white/10 via-transparent to-[#F9F8F4]"></div>
+            </div>
+          )}
+        </div>
 
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1.2, ease: "easeOut" }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
           className="max-w-4xl relative z-10"
         >
           <h1 className="text-2xl md:text-4xl font-bold text-black mb-6 tracking-[0.2em] leading-relaxed drop-shadow-[0_2px_10px_rgba(255,255,255,0.8)]">
@@ -128,20 +132,18 @@ export const Home: React.FC = () => {
         <div className="max-w-6xl mx-auto px-6">
           {/* Banner 圖片區 */}
           <div 
-            className={`transition-all duration-500 ease-out overflow-hidden ${
-              isCatBannerReady && catImageSrc
-                ? "w-full aspect-[16/9] md:aspect-[21/9] rounded-[2.5rem] shadow-md border border-stone-100 max-h-[500px] opacity-100 animate-in fade-in duration-500"
-                : "min-h-0 h-0 opacity-0 border-0 shadow-none pointer-events-none"
-            }`}
+            className="w-full aspect-[16/9] md:aspect-[21/9] rounded-[2.5rem] shadow-md border border-stone-100 max-h-[500px] bg-stone-100 overflow-hidden relative"
           >
-            {isCatBannerReady && catImageSrc ? (
+            {catImageSrc ? (
               <img 
                 src={catImageSrc} 
                 alt="店長貓的巡邏領地" 
-                className="w-full h-full object-cover select-none pointer-events-none"
+                className="w-full h-full object-cover select-none pointer-events-none transition-opacity duration-700 ease-in-out opacity-100"
                 referrerPolicy="no-referrer"
               />
-            ) : null}
+            ) : (
+              <div className="w-full h-full bg-stone-100 animate-pulse" />
+            )}
           </div>
 
           {/* 文字與按鈕區 */}
@@ -246,14 +248,14 @@ export const Home: React.FC = () => {
           <p className="text-center text-stone-400 font-serif italic mb-20">The Essence of Me & Tea</p>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {(settings?.philosophy || []).map((item, i) => (
+            {philosophyItems.map((item, i) => (
               <motion.div
                 key={i}
-                initial={{ opacity: 0, y: 30 }}
+                initial={{ opacity: 0, y: 15 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 whileHover={{ y: -5 }}
                 viewport={{ once: true }}
-                transition={{ delay: i * 0.15, duration: 0.8 }}
+                transition={{ delay: i * 0.1, duration: 0.5 }}
                 className="bg-white p-10 rounded-3xl text-center border border-stone-100 shadow-sm hover:shadow-2xl hover:border-stone-200 transition-all duration-500 group"
               >
                 <div className="relative w-24 h-24 mx-auto mb-10 overflow-hidden rounded-2xl shadow-inner bg-stone-50">
