@@ -978,6 +978,9 @@ app.use(express.json());
     });
   } else {
     const distPath = path.resolve(process.cwd(), 'dist');
+    // Serve raw source files for source maps in production to prevent 404s
+    app.use('/src', express.static(path.resolve(process.cwd(), 'src')));
+
     app.use(express.static(distPath, {
       index: false,
       setHeaders: (res, filePath) => {
