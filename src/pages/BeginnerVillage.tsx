@@ -763,7 +763,7 @@ export const BeginnerVillage: React.FC = () => {
           setUserCompletedAllLevels(true);
           localStorage.setItem('user_completed_all_levels', 'true');
           const closedUltimate = sessionStorage.getItem('miye_closed_ultimate') === 'true';
-          if (!closedUltimate) {
+          if (!closedUltimate && !activeStageId && !stageResult) {
             setShowUltimateScreen(true);
           }
         }
@@ -902,7 +902,7 @@ export const BeginnerVillage: React.FC = () => {
     if (completedAll) {
       setUserCompletedAllLevels(true);
       const closedUltimate = sessionStorage.getItem('miye_closed_ultimate') === 'true';
-      if (!closedUltimate) {
+      if (!closedUltimate && !activeStageId && !stageResult) {
         setShowUltimateScreen(true);
       }
     }
@@ -1132,7 +1132,19 @@ export const BeginnerVillage: React.FC = () => {
     setSelectedZodiac(null);
 
     // Trigger ultimate animation page if just completed all 5
-    verifyOverallCompletion(completedStages);
+    // Double check from both state and localStorage to be absolutely safe
+    let currentCompleted = completedStages;
+    try {
+      const saved = localStorage.getItem('miye_village_completed');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > currentCompleted.length) {
+          currentCompleted = parsed;
+        }
+      }
+    } catch (e) {}
+
+    verifyOverallCompletion(currentCompleted);
   };
 
   const handleRestartAll = () => {
