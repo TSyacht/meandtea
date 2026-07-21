@@ -7,7 +7,8 @@ import {
   VillageStage, 
   Question,
   fetchTempTestResults,
-  saveTempTestResults
+  saveTempTestResults,
+  deleteTempTestResults
 } from '../services/beginnerVillageService';
 import { 
   Compass, 
@@ -577,6 +578,7 @@ export const BeginnerVillage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
   const [dbResults, setDbResults] = useState<any[]>([]);
+  const [dbRecordId, setDbRecordId] = useState<string | null>(null);
   const [systemAvatars, setSystemAvatars] = useState<any[]>([]);
   const [config, setConfig] = useState<BeginnerVillageConfig | null>(null);
   const [completedStages, setCompletedStages] = useState<string[]>([]);
@@ -712,6 +714,7 @@ export const BeginnerVillage: React.FC = () => {
       }
 
       if (record && record.test_data) {
+        setDbRecordId(record.id);
         const testData = record.test_data;
         const stageScores = testData.stage_scores || {};
         const completedList = testData.completed_stages || Object.keys(stageScores);
@@ -1153,9 +1156,20 @@ export const BeginnerVillage: React.FC = () => {
     localStorage.removeItem('miye_village_completed');
     localStorage.removeItem('miye_village_stage_score');
     localStorage.removeItem('user_completed_all_levels');
-    sessionStorage.removeItem('miye_village_completed');
-    sessionStorage.removeItem('miye_closed_ultimate');
+    
+    // Clear all session storage keys
+    sessionStorage.removeItem('miye_active_stage_id');
+    sessionStorage.removeItem('miye_in_intro_screen');
+    sessionStorage.removeItem('miye_current_question_index');
+    sessionStorage.removeItem('miye_running_score');
+    sessionStorage.removeItem('miye_selected_zodiac');
+    sessionStorage.removeItem('miye_stage_result');
+    sessionStorage.removeItem('miye_show_ultimate_screen');
     sessionStorage.removeItem('miye_has_begun_ceremony');
+    sessionStorage.removeItem('miye_selected_review_stage_id');
+    sessionStorage.removeItem('miye_closed_ultimate');
+    sessionStorage.removeItem('miye_village_completed');
+
     setUserCompletedAllLevels(false);
     setStageResult(null);
     setShowUltimateScreen(false);
@@ -1163,10 +1177,19 @@ export const BeginnerVillage: React.FC = () => {
     setCurrentQuestionIndex(0);
     setRunningScore(0);
     setSelectedZodiac(null);
-    setActiveStageId('personality');
+    setActiveStageId(null); // Return to main map overview screen instead of starting personality stage
     setShowResetConfirm(false);
     setInIntroScreen(false);
-    toast.success('進度已完全重置，歡迎自第一關再度啟程！');
+    setDbResults([]);
+    
+    if (dbRecordId) {
+      deleteTempTestResults(dbRecordId).catch(err => {
+        console.error('Failed to delete temp test results from DB:', err);
+      });
+      setDbRecordId(null);
+    }
+    
+    toast.success('進度已完全重置，歡迎探索新手村！');
   };
 
   if (loading) {
