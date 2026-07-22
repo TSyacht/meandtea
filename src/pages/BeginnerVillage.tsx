@@ -17,6 +17,7 @@ import {
   Download, 
   CheckCircle2, 
   ChevronRight, 
+  ArrowRight,
   X, 
   Copy, 
   Check, 
@@ -1775,22 +1776,26 @@ export const BeginnerVillage: React.FC = () => {
               </div>
 
               {hasBegunCeremony && (
-                <div className="pt-6 border-t border-stone-100 flex flex-col items-center gap-3">
+                <div className="mt-8 pt-8 border-t border-stone-200/60 flex flex-col items-center gap-5">
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => setShowUltimateScreen(false)}
+                    className="w-full max-w-md bg-[#FAF7F2] hover:bg-[#F3EFE6] border-2 border-[#707040]/30 hover:border-[#707040] text-[#707040] py-4 px-6 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 flex items-center justify-center gap-3 group cursor-pointer text-base md:text-lg font-extrabold tracking-wider"
+                  >
+                    <span>返回新手村探索地圖</span>
+                    <ArrowRight size={20} className="transition-transform duration-300 group-hover:translate-x-2 shrink-0 text-[#707040]" />
+                  </motion.button>
+
                   <button
                     onClick={() => {
                       if (window.confirm('確定要清除所有進度並重新開始測驗嗎？')) {
                         handleRestartAll();
                       }
                     }}
-                    className="w-full max-w-xs bg-[#707040] hover:bg-[#5a5a31] text-white py-3 px-6 rounded-xl text-xs font-bold tracking-widest transition-all shadow-sm active:scale-97 flex items-center justify-center gap-2 uppercase"
+                    className="text-stone-400 hover:text-stone-600 text-xs font-medium tracking-wider underline underline-offset-4 transition py-1"
                   >
                     重新開始測驗 (Restart)
-                  </button>
-                  <button
-                    onClick={() => setShowUltimateScreen(false)}
-                    className="text-stone-500 hover:text-stone-800 text-xs font-semibold underline underline-offset-4 tracking-wider"
-                  >
-                    返回新手村探索地圖
                   </button>
                 </div>
               )}
@@ -2062,13 +2067,17 @@ export const BeginnerVillage: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="pt-6 border-t border-stone-100">
-                    <button
+                  {/* 位置與層級優化：獨立引導按鈕區塊與擴充留白 */}
+                  <div className="mt-8 pt-8 border-t border-stone-200/60 flex flex-col items-center">
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
                       onClick={handleBackToVillage}
-                      className="text-[#707040] hover:underline text-xs font-bold tracking-wider"
+                      className="w-full max-w-md bg-[#FAF7F2] hover:bg-[#F3EFE6] border-2 border-[#707040]/30 hover:border-[#707040] text-[#707040] py-4 px-6 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 flex items-center justify-center gap-3 group cursor-pointer text-base md:text-lg font-extrabold tracking-wider"
                     >
-                      返回新手村探索地圖 ➔
-                    </button>
+                      <span>返回新手村探索地圖</span>
+                      <ArrowRight size={20} className="transition-transform duration-300 group-hover:translate-x-2 shrink-0 text-[#707040]" />
+                    </motion.button>
                   </div>
                 </div>
               ) : inIntroScreen ? (
