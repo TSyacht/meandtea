@@ -28,7 +28,8 @@ import {
   BookOpen,
   Volume2,
   VolumeX,
-  Play
+  Play,
+  ShoppingBag
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { supabase, supabaseUrl } from '../db';
@@ -421,22 +422,6 @@ export const BeginnerVillage: React.FC = () => {
         description: '默默紮根、滋養周遭，在冷靜中展現無窮的堅韌生命力。'
       },
       {
-        id: 'zodiac',
-        name: '星座茶緣',
-        title: '烈焰焙火黑茶 (火象星緣)',
-        image: 'https://images.unsplash.com/photo-1544787219-7f47ccb76574?auto=format&fit=crop&w=400&q=80',
-        score: 4,
-        description: '熱情奔放如烈火，適合溫潤醇厚的焙火茶，溫暖身心。'
-      },
-      {
-        id: 'energy',
-        name: '今日能量值',
-        title: '夏日正午朝陽 (能量 95%)',
-        image: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=400&q=80',
-        score: 3,
-        description: '充沛的生命元力，與大自然萬物熱烈共生，充滿正能量。'
-      },
-      {
         id: 'lifestyle',
         name: '生活風格',
         title: '細微美學典雅型',
@@ -451,6 +436,22 @@ export const BeginnerVillage: React.FC = () => {
         image: 'https://images.unsplash.com/photo-1576092768241-dec231879fc3?auto=format&fit=crop&w=400&q=80',
         score: 3,
         description: '對茶香與大自然的芬芳極具天賦，一呼一吸間解密山林的美好。'
+      },
+      {
+        id: 'energy',
+        name: '今日能量值',
+        title: '夏日正午朝陽 (能量 95%)',
+        image: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=400&q=80',
+        score: 3,
+        description: '充沛的生命元力，與大自然萬物熱烈共生，充滿正能量。'
+      },
+      {
+        id: 'zodiac',
+        name: '星座茶緣',
+        title: '烈焰焙火黑茶 (火象星緣)',
+        image: 'https://images.unsplash.com/photo-1544787219-7f47ccb76574?auto=format&fit=crop&w=400&q=80',
+        score: 4,
+        description: '熱情奔放如烈火，適合溫潤醇厚的焙火茶，溫暖身心。'
       }
     ];
 
@@ -480,45 +481,53 @@ export const BeginnerVillage: React.FC = () => {
   };
 
   const getCatTypeForStage = (stageId: string, score: number, title: string): string => {
-    if (stageId === 'personality') {
-      if (score <= 3) return 'black_cat';
-      if (score <= 5) return 'spring_water_cat';
-      if (score <= 7) return 'orange_cat';
-      if (score <= 9) return 'tabby_cat';
-      return 'calico_cat';
-    } else if (stageId === 'zodiac') {
-      const t = title || '';
-      if (t.includes('火') || t.includes('牡羊') || t.includes('獅子') || t.includes('射手') || t.includes('烈焰')) {
-        return 'tabby_cat';
-      } else if (t.includes('水') || t.includes('雙魚') || t.includes('巨蟹') || t.includes('天蠍') || t.includes('清泉')) {
-        return 'spring_water_cat';
-      } else if (t.includes('土') || t.includes('金牛') || t.includes('處女') || t.includes('摩羯') || t.includes('炭香')) {
-        return 'black_cat';
-      } else if (t.includes('風') || t.includes('雙子') || t.includes('天秤') || t.includes('水瓶') || t.includes('微風')) {
-        return 'orange_cat';
-      } else {
-        return 'calico_cat';
-      }
-    } else if (stageId === 'energy') {
-      if (score <= 2) return 'black_cat';
-      if (score <= 4) return 'spring_water_cat';
-      if (score <= 6) return 'orange_cat';
-      if (score <= 8) return 'tabby_cat';
-      return 'calico_cat';
-    } else if (stageId === 'lifestyle') {
-      if (score <= 2) return 'black_cat';
-      if (score <= 4) return 'spring_water_cat';
-      if (score <= 6) return 'orange_cat';
-      if (score <= 8) return 'tabby_cat';
-      return 'calico_cat';
-    } else if (stageId === 'sensory') {
-      if (score <= 2) return 'black_cat';
-      if (score <= 4) return 'spring_water_cat';
-      if (score <= 6) return 'orange_cat';
-      if (score <= 8) return 'tabby_cat';
+    const t = (title || '').toLowerCase();
+
+    // 1. Direct title keywords check
+    if (t.includes('黑茶') || t.includes('紅茶') || t.includes('水蓑衣') || t.includes('炭焙') || t.includes('柴燒')) {
+      return 'black_cat';
+    }
+    if (t.includes('蜜果') || t.includes('暑月') || t.includes('野薑花') || t.includes('微光') || t.includes('晨霧') || t.includes('清泉')) {
+      return 'spring_water_cat';
+    }
+    if (t.includes('烏龍') || t.includes('典雅') || t.includes('隱士') || t.includes('美學')) {
+      return 'orange_cat';
+    }
+    if (t.includes('綠茶') || t.includes('朝陽') || t.includes('香茗') || t.includes('白葉')) {
+      return 'tabby_cat';
+    }
+    if (t.includes('福圓') || t.includes('放鬆') || t.includes('gaba') || t.includes('品茶師') || t.includes('心覺')) {
       return 'calico_cat';
     }
-    return 'black_cat';
+
+    // 2. Score mapping per stage if title is not explicit
+    if (stageId === 'personality') {
+      if (score <= 3) return 'black_cat';
+      if (score <= 4) return 'spring_water_cat';
+      if (score <= 5) return 'orange_cat';
+      if (score <= 6) return 'tabby_cat';
+      return 'calico_cat';
+    } else if (stageId === 'zodiac') {
+      if (t.includes('火') || t.includes('牡羊') || t.includes('獅子') || t.includes('射手') || t.includes('烈焰')) {
+        return 'black_cat';
+      } else if (t.includes('土') || t.includes('金牛') || t.includes('處女') || t.includes('摩羯') || t.includes('土壤')) {
+        return 'orange_cat';
+      } else if (t.includes('風') || t.includes('雙子') || t.includes('天秤') || t.includes('水瓶')) {
+        return 'tabby_cat';
+      } else if (t.includes('水') || t.includes('雙魚') || t.includes('巨蟹') || t.includes('天蠍')) {
+        return 'spring_water_cat';
+      }
+      return 'orange_cat';
+    } else if (stageId === 'energy' || stageId === 'lifestyle' || stageId === 'sensory') {
+      // 1-question stages where option score is 1, 2, 3, or 4
+      if (score <= 1) return 'black_cat';
+      if (score === 2) return 'spring_water_cat';
+      if (score === 3) return 'orange_cat';
+      if (score >= 4) return 'tabby_cat';
+      return 'orange_cat';
+    }
+
+    return 'orange_cat';
   };
 
   const getCatImage = (catType: string, avatarsList: any[]) => {
@@ -1216,27 +1225,11 @@ export const BeginnerVillage: React.FC = () => {
       tag: '⭐ 核心引導'
     },
     { 
-      id: 'zodiac', 
-      name: '星座茶緣', 
-      desc: '解鎖本命星空的茶草因緣',
-      posClass: 'md:top-[46%] md:left-[20%] md:-translate-x-1/2 md:-translate-y-1/2',
-      mobileOrder: 'order-2',
-      bg: 'bg-white hover:bg-stone-50 text-stone-800 border border-[#707040]/10 hover:border-[#707040]/50'
-    },
-    { 
-      id: 'energy', 
-      name: '今日能量值', 
-      desc: '診斷你當下的自然原力指數',
-      posClass: 'md:top-[46%] md:right-[20%] md:translate-x-1/2 md:-translate-y-1/2',
-      mobileOrder: 'order-3',
-      bg: 'bg-white hover:bg-stone-50 text-stone-800 border border-[#707040]/10 hover:border-[#707040]/50'
-    },
-    { 
       id: 'lifestyle', 
       name: '生活風格', 
       desc: '透析你在日常的禪意美學',
       posClass: 'md:bottom-[15%] md:left-[26%] md:-translate-x-1/2 md:translate-y-1/2',
-      mobileOrder: 'order-4',
+      mobileOrder: 'order-2',
       bg: 'bg-white hover:bg-stone-50 text-stone-800 border border-[#707040]/10 hover:border-[#707040]/50'
     },
     { 
@@ -1244,6 +1237,22 @@ export const BeginnerVillage: React.FC = () => {
       name: '感官密碼', 
       desc: '破譯你與森林花葉相觸的天賦',
       posClass: 'md:bottom-[15%] md:right-[26%] md:translate-x-1/2 md:translate-y-1/2',
+      mobileOrder: 'order-3',
+      bg: 'bg-white hover:bg-stone-50 text-stone-800 border border-[#707040]/10 hover:border-[#707040]/50'
+    },
+    { 
+      id: 'energy', 
+      name: '今日能量值', 
+      desc: '診斷你當下的自然原力指數',
+      posClass: 'md:top-[46%] md:right-[20%] md:translate-x-1/2 md:-translate-y-1/2',
+      mobileOrder: 'order-4',
+      bg: 'bg-white hover:bg-stone-50 text-stone-800 border border-[#707040]/10 hover:border-[#707040]/50'
+    },
+    { 
+      id: 'zodiac', 
+      name: '星座茶緣', 
+      desc: '解鎖本命星空的茶草因緣',
+      posClass: 'md:top-[46%] md:left-[20%] md:-translate-x-1/2 md:-translate-y-1/2',
       mobileOrder: 'order-5',
       bg: 'bg-white hover:bg-stone-50 text-stone-800 border border-[#707040]/10 hover:border-[#707040]/50'
     }
@@ -1456,20 +1465,31 @@ export const BeginnerVillage: React.FC = () => {
                               👑 最終探索成果
                             </div>
 
-                            {/* 2. 你最適合的茶品 */}
-                            <h3 className="text-lg md:text-xl font-serif font-extrabold text-stone-800 tracking-wider">
-                              你最適合的茶品
-                            </h3>
-
-                            {/* 3. 對應茶品的頭像 & 4. 對應茶品的名稱 */}
+                            {/* 2. 動態標題排版 */}
                             {matchedCats.length > 1 ? (
-                              <div className="w-full space-y-4">
+                              <div className="text-center space-y-1">
+                                <h3 className="text-lg md:text-xl font-serif font-extrabold text-stone-800 tracking-wider">
+                                  你最適合的茶品是
+                                </h3>
+                                <p className="text-lg md:text-xl font-serif font-extrabold text-[#707040] tracking-wider">
+                                  {matchedCats[0].name} 和 {matchedCats[1].name}
+                                </p>
+                              </div>
+                            ) : (
+                              <h3 className="text-lg md:text-xl font-serif font-extrabold text-stone-800 tracking-wider text-center">
+                                你最適合的茶品是{matchedCats[0]?.name || ''}
+                              </h3>
+                            )}
+
+                            {/* 3. 對應茶品的頭像 & 4. 「點我購買」互動按鈕 */}
+                            {matchedCats.length > 1 ? (
+                              <div className="w-full space-y-6 flex flex-col items-center">
                                 <div className="grid grid-cols-2 gap-6 max-w-sm mx-auto">
                                   {matchedCats.slice(0, 2).map((cat) => {
                                     const slug = catProductSlugs[cat.id] || '';
                                     return (
                                       <div key={cat.id} className="flex flex-col items-center">
-                                        <div className="relative w-28 h-28 rounded-2xl overflow-hidden border-2 border-amber-400 shadow-md bg-stone-50 group mb-3 z-10">
+                                        <div className="relative w-28 h-28 rounded-2xl overflow-hidden border-2 border-amber-400 shadow-md bg-stone-50 group mb-2 z-10">
                                           <Link 
                                             to={`/product/${slug}`}
                                             className="block w-full h-full cursor-pointer relative z-20"
@@ -1490,16 +1510,28 @@ export const BeginnerVillage: React.FC = () => {
                                     );
                                   })}
                                 </div>
+
+                                {/* 互動按鈕：2種茶貓平手時導向至商品總頁面 */}
+                                <a 
+                                  href="https://meandtea.vercel.app/products"
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="w-full max-w-xs py-3.5 px-6 bg-[#707040] hover:bg-[#5a5a33] text-white font-extrabold rounded-2xl shadow-md hover:shadow-lg transition-all duration-300 flex items-center justify-center gap-2 group text-base tracking-wider cursor-pointer"
+                                >
+                                  <ShoppingBag size={18} className="transition-transform group-hover:scale-110 shrink-0" />
+                                  <span>點我購買</span>
+                                </a>
                               </div>
                             ) : (
-                              matchedCats.map(cat => {
+                              matchedCats.slice(0, 1).map(cat => {
                                 const slug = catProductSlugs[cat.id] || '';
+                                const singleProductUrl = slug ? `/product/${slug}` : '/products';
                                 return (
-                                  <div key={cat.id} className="w-full space-y-4 flex flex-col items-center">
-                                    {/* 3. 對應茶品的頭像 */}
+                                  <div key={cat.id} className="w-full space-y-6 flex flex-col items-center">
+                                    {/* 對應茶品的頭像 */}
                                     <div className="relative w-36 h-36 rounded-3xl overflow-hidden border-2 border-amber-400 shadow-md bg-stone-100 group z-10">
                                       <Link 
-                                        to={`/product/${slug}`}
+                                        to={singleProductUrl}
                                         className="block w-full h-full cursor-pointer relative z-20"
                                         title={`點擊查看 ${cat.name} 商品頁`}
                                       >
@@ -1512,10 +1544,18 @@ export const BeginnerVillage: React.FC = () => {
                                       </Link>
                                     </div>
                                     
-                                    {/* 4. 對應茶品的名稱 */}
                                     <h4 className="text-lg font-bold text-stone-800 tracking-wide font-sans">
                                       {cat.name}
                                     </h4>
+
+                                    {/* 互動按鈕：單一茶貓時導向至該茶貓個別商品頁面 */}
+                                    <Link 
+                                      to={singleProductUrl}
+                                      className="w-full max-w-xs py-3.5 px-6 bg-[#707040] hover:bg-[#5a5a33] text-white font-extrabold rounded-2xl shadow-md hover:shadow-lg transition-all duration-300 flex items-center justify-center gap-2 group text-base tracking-wider cursor-pointer"
+                                    >
+                                      <ShoppingBag size={18} className="transition-transform group-hover:scale-110 shrink-0" />
+                                      <span>點我購買</span>
+                                    </Link>
                                   </div>
                                 );
                               })
