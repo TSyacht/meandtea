@@ -414,12 +414,12 @@ export const BeginnerVillage: React.FC = () => {
 
     const defaultStages = [
       {
-        id: 'personality',
-        name: '尋茶人格',
-        title: '堅韌大安水蓑衣型',
-        image: 'https://images.unsplash.com/photo-1545241047-6083a3684587?auto=format&fit=crop&w=400&q=80',
-        score: 6,
-        description: '默默紮根、滋養周遭，在冷靜中展現無窮的堅韌生命力。'
+        id: 'zodiac',
+        name: '星座茶緣',
+        title: '烈焰焙火黑茶 (火象星緣)',
+        image: 'https://images.unsplash.com/photo-1544787219-7f47ccb76574?auto=format&fit=crop&w=400&q=80',
+        score: 4,
+        description: '熱情奔放如烈火，適合溫潤醇厚的焙火茶，溫暖身心。'
       },
       {
         id: 'lifestyle',
@@ -446,12 +446,12 @@ export const BeginnerVillage: React.FC = () => {
         description: '充沛的生命元力，與大自然萬物熱烈共生，充滿正能量。'
       },
       {
-        id: 'zodiac',
-        name: '星座茶緣',
-        title: '烈焰焙火黑茶 (火象星緣)',
-        image: 'https://images.unsplash.com/photo-1544787219-7f47ccb76574?auto=format&fit=crop&w=400&q=80',
-        score: 4,
-        description: '熱情奔放如烈火，適合溫潤醇厚的焙火茶，溫暖身心。'
+        id: 'personality',
+        name: '尋茶人格',
+        title: '堅韌大安水蓑衣型',
+        image: 'https://images.unsplash.com/photo-1545241047-6083a3684587?auto=format&fit=crop&w=400&q=80',
+        score: 6,
+        description: '默默紮根、滋養周遭，在冷靜中展現無窮的堅韌生命力。'
       }
     ];
 
@@ -1216,9 +1216,9 @@ export const BeginnerVillage: React.FC = () => {
   // We use responsive styles to anchor them perfectly.
   const mapNodes = [
     { 
-      id: 'personality', 
-      name: '尋茶人格', 
-      desc: '探索心靈深處的草木角色',
+      id: 'zodiac', 
+      name: '星座茶緣', 
+      desc: '解鎖本命星空的茶草因緣',
       posClass: 'md:top-[12%] md:left-[50%] md:-translate-x-1/2 md:-translate-y-1/2',
       mobileOrder: 'order-1',
       bg: 'bg-gradient-to-br from-[#707040] to-[#5a5a31] text-white border border-[#707040]',
@@ -1249,9 +1249,9 @@ export const BeginnerVillage: React.FC = () => {
       bg: 'bg-white hover:bg-stone-50 text-stone-800 border border-[#707040]/10 hover:border-[#707040]/50'
     },
     { 
-      id: 'zodiac', 
-      name: '星座茶緣', 
-      desc: '解鎖本命星空的茶草因緣',
+      id: 'personality', 
+      name: '尋茶人格', 
+      desc: '探索心靈深處的草木角色',
       posClass: 'md:top-[46%] md:left-[20%] md:-translate-x-1/2 md:-translate-y-1/2',
       mobileOrder: 'order-5',
       bg: 'bg-white hover:bg-stone-50 text-stone-800 border border-[#707040]/10 hover:border-[#707040]/50'
@@ -2316,7 +2316,7 @@ export const BeginnerVillage: React.FC = () => {
               <div className="relative w-full max-w-4xl mx-auto p-4 md:p-0">
                 {/* Nodes rendering - Custom symmetric-gap fluid grid with no absolute positioning to prevent overlap */}
                 <div className="w-full h-auto min-h-0 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-8 md:gap-12">
-                  {mapNodes.map((node) => {
+                  {mapNodes.map((node, index) => {
                     const isCompleted = completedStages.includes(node.id);
                     const bgImage = 
                       node.id === 'personality' ? config?.map_bg_personality :
@@ -2326,12 +2326,12 @@ export const BeginnerVillage: React.FC = () => {
                       node.id === 'sensory' ? config?.map_bg_sensory : undefined;
                     
                     const hasBgImage = bgImage && bgImage.trim() !== '';
-                    const isPersonality = node.id === 'personality';
+                    const isFirstNode = index === 0;
 
                     return (
                       <div 
                         key={node.id} 
-                        className={`w-full ${isPersonality ? "sm:col-span-2 flex justify-center" : ""}`}
+                        className={`w-full ${isFirstNode ? "sm:col-span-2 flex justify-center" : ""}`}
                       >
                         <motion.button
                           whileHover={{ scale: 1.03 }}
@@ -2340,7 +2340,7 @@ export const BeginnerVillage: React.FC = () => {
                           className={`
                             aspect-[4/3] rounded-3xl text-left transition-all duration-300
                             flex flex-col justify-between items-start gap-2 cursor-pointer relative overflow-hidden
-                            ${isPersonality ? 'w-full sm:max-w-md' : 'w-full'}
+                            ${isFirstNode ? 'w-full sm:max-w-md' : 'w-full'}
                             ${hasBgImage ? 'border-0 bg-transparent shadow-none' : `${node.bg} shadow-md`}
                           `}
                           style={{
