@@ -956,7 +956,7 @@ export const BeginnerVillage: React.FC = () => {
   const currentStage = config?.stages.find(s => s.id === activeStageId);
 
   const getResultForStage = (stageId: string) => {
-    const summary = stagesData.find(s => s.id === stageId);
+    const summary = getStageSummaryData().find(s => s.id === stageId);
     const stageConfig = config?.stages.find(s => s.id === stageId);
     
     let image = summary?.image || '';
@@ -1003,6 +1003,7 @@ export const BeginnerVillage: React.FC = () => {
       setActiveStageId(stageId);
       setInIntroScreen(false);
       setSelectedReviewStageId(null);
+      setShowUltimateScreen(false);
       return;
     }
 
@@ -1627,13 +1628,17 @@ export const BeginnerVillage: React.FC = () => {
                                 return (
                                   <div 
                                     key={stage.id} 
-                                    className="bg-stone-50/50 border border-stone-200/40 rounded-2xl p-3 shadow-2xs flex items-center gap-3 text-left transition-all hover:bg-stone-50"
+                                    onClick={() => handleStageClick(stage.id)}
+                                    className="bg-stone-50/50 hover:bg-stone-100/80 border border-stone-200/40 rounded-2xl p-3 shadow-2xs flex items-center gap-3 text-left transition-all cursor-pointer group/row"
                                   >
                                     {/* (結果縮圖) */}
                                     <div 
-                                      onClick={() => setSelectedLargeImageUrl(stage.image)}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setSelectedLargeImageUrl(stage.image);
+                                      }}
                                       className="w-10 h-10 rounded-lg overflow-hidden bg-white border border-stone-100 shrink-0 shadow-xs cursor-pointer hover:ring-2 hover:ring-amber-400 active:scale-95 transition-all group/thumb relative"
-                                      title="點擊放大此高畫質結果圖卡"
+                                      title="點擊預覽高畫質結果圖卡"
                                     >
                                       <img 
                                         src={stage.image} 
@@ -1653,7 +1658,7 @@ export const BeginnerVillage: React.FC = () => {
                                         <span>{stage.name}</span>
                                       </div>
                                       
-                                      <h5 className="text-xs font-bold text-stone-800 truncate text-right min-w-0 flex-1 leading-none">
+                                      <h5 className="text-xs font-bold text-stone-800 truncate text-right min-w-0 flex-1 leading-none group-hover/row:text-[#707040] transition-colors">
                                         {stage.title}
                                       </h5>
                                     </div>
@@ -2524,34 +2529,32 @@ export const BeginnerVillage: React.FC = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-stone-950/85 backdrop-blur-md"
+              className="absolute inset-0 bg-stone-950/80 backdrop-blur-md"
               onClick={() => setSelectedLargeImageUrl(null)}
             />
             <motion.div 
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="relative bg-[#FCFAF7] border border-stone-200/60 rounded-3xl overflow-hidden shadow-2xl z-10 max-w-sm md:max-w-md w-full flex flex-col p-5"
+              className="relative z-10 max-w-[420px] w-full flex flex-col items-center justify-center pointer-events-auto"
             >
-              <div className="flex justify-between items-center mb-4">
-                <span className="text-xs text-stone-500 font-bold tracking-wider font-sans">尋茶大圖預覽 (High Quality Image)</span>
-                <button 
-                  onClick={() => setSelectedLargeImageUrl(null)}
-                  className="p-1.5 rounded-full hover:bg-stone-100 text-stone-400 hover:text-stone-600 transition-colors cursor-pointer shadow-xs active:scale-90"
-                >
-                  <X size={18} />
-                </button>
-              </div>
-              <div className="relative aspect-square w-full rounded-2xl overflow-hidden bg-stone-100 border border-stone-200/50 shadow-inner group">
+              {/* 右上角獨立關閉按鈕 X */}
+              <button 
+                onClick={() => setSelectedLargeImageUrl(null)}
+                className="absolute -top-3 -right-3 z-20 w-9 h-9 rounded-full bg-white text-stone-700 hover:text-stone-900 shadow-xl flex items-center justify-center transition-all cursor-pointer active:scale-90"
+                aria-label="關閉預覽"
+              >
+                <X size={20} />
+              </button>
+
+              {/* 完整標準高畫質直式 9:16 主視覺卡片 */}
+              <div className="w-full aspect-[9/16] max-h-[82vh] rounded-[2rem] overflow-hidden bg-stone-900 shadow-2xl relative">
                 <img 
                   src={selectedLargeImageUrl} 
                   alt="尋茶結果高畫質大圖" 
-                  className="w-full h-full object-cover select-none pointer-events-auto"
+                  className="w-full h-full object-cover select-none"
                   referrerPolicy="no-referrer"
                 />
-              </div>
-              <div className="text-center mt-4">
-                <p className="text-[11px] text-stone-500 font-medium leading-relaxed">長按大圖或使用手機截圖，即可保存並分享您的獨特茶緣與茶品 🍵</p>
               </div>
             </motion.div>
           </div>
