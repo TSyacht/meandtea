@@ -638,9 +638,6 @@ export const BeginnerVillage: React.FC = () => {
     const val = sessionStorage.getItem('miye_in_intro_screen');
     return val !== null ? val === 'true' : false;
   });
-  const [selectedReviewStageId, setSelectedReviewStageId] = useState<string | null>(() => {
-    return sessionStorage.getItem('miye_selected_review_stage_id');
-  });
   const [productsList, setProductsList] = useState<Product[]>([]);
   const [selectedLargeImageUrl, setSelectedLargeImageUrl] = useState<string | null>(null);
 
@@ -688,14 +685,6 @@ export const BeginnerVillage: React.FC = () => {
   useEffect(() => {
     sessionStorage.setItem('miye_has_begun_ceremony', String(hasBegunCeremony));
   }, [hasBegunCeremony]);
-
-  useEffect(() => {
-    if (selectedReviewStageId !== null) {
-      sessionStorage.setItem('miye_selected_review_stage_id', selectedReviewStageId);
-    } else {
-      sessionStorage.removeItem('miye_selected_review_stage_id');
-    }
-  }, [selectedReviewStageId]);
 
   // Auto scroll-to-top on state transitions: starting quiz, switching questions, viewing results, or returning to map.
   useEffect(() => {
@@ -1002,7 +991,6 @@ export const BeginnerVillage: React.FC = () => {
       setStageResult(result);
       setActiveStageId(stageId);
       setInIntroScreen(false);
-      setSelectedReviewStageId(null);
       setShowUltimateScreen(false);
       return;
     }
@@ -1633,12 +1621,8 @@ export const BeginnerVillage: React.FC = () => {
                                   >
                                     {/* (結果縮圖) */}
                                     <div 
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        setSelectedLargeImageUrl(stage.image);
-                                      }}
-                                      className="w-10 h-10 rounded-lg overflow-hidden bg-white border border-stone-100 shrink-0 shadow-xs cursor-pointer hover:ring-2 hover:ring-amber-400 active:scale-95 transition-all group/thumb relative"
-                                      title="點擊預覽高畫質結果圖卡"
+                                      className="w-10 h-10 rounded-lg overflow-hidden bg-white border border-stone-100 shrink-0 shadow-xs cursor-pointer hover:ring-2 hover:ring-[#707040] active:scale-95 transition-all group/thumb relative"
+                                      title="點擊查看完整結算頁"
                                     >
                                       <img 
                                         src={stage.image} 
