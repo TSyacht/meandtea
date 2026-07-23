@@ -955,9 +955,54 @@ export const BeginnerVillage: React.FC = () => {
 
   const currentStage = config?.stages.find(s => s.id === activeStageId);
 
+  const getResultForStage = (stageId: string) => {
+    const summary = stagesData.find(s => s.id === stageId);
+    const stageConfig = config?.stages.find(s => s.id === stageId);
+    
+    let image = summary?.image || '';
+    let title = summary?.title || '';
+    let description = summary?.description || '';
+    let socialText = '快來覓野茶新手村解鎖你的專屬尋茶基因吧！';
+
+    if (stageConfig) {
+      if (stageId === 'zodiac' && stageConfig.zodiacMappings) {
+        const match = stageConfig.zodiacMappings.find(m => m.title === title) || stageConfig.zodiacMappings[0];
+        if (match) {
+          title = title || match.title;
+          image = image || match.image;
+          description = description || match.description || '';
+          if (match.socialText) socialText = match.socialText;
+        }
+      } else if (stageConfig.ranges) {
+        const score = summary?.score ?? 0;
+        const match = stageConfig.ranges.find(r => r.title === title) 
+          || stageConfig.ranges.find(r => score >= r.minScore && score <= r.maxScore)
+          || stageConfig.ranges[0];
+        if (match) {
+          title = title || match.title;
+          image = image || match.image;
+          description = description || (match as any).description || '';
+          if (match.socialText) socialText = match.socialText;
+        }
+      }
+    }
+
+    return {
+      stageId,
+      title: title || '尋茶人成果',
+      image: image || 'https://images.unsplash.com/photo-1596436889106-be35e843f974?auto=format&fit=crop&w=800&q=80',
+      socialText,
+      description: description || ''
+    };
+  };
+
   const handleStageClick = (stageId: string) => {
     if (completedStages.includes(stageId)) {
-      setSelectedReviewStageId(stageId);
+      const result = getResultForStage(stageId);
+      setStageResult(result);
+      setActiveStageId(stageId);
+      setInIntroScreen(false);
+      setSelectedReviewStageId(null);
       return;
     }
 
@@ -2471,78 +2516,8 @@ export const BeginnerVillage: React.FC = () => {
         </AnimatePresence>
       </div>
 
-      {/* 4. SINGLE STAGE REVIEW MODAL POPUP */}
+      {/* 4. HIGH QUALITY IMAGE MODAL */}
       <AnimatePresence>
-        {selectedReviewStageId && (() => {
-          const stagesData = getStageSummaryData();
-          const stage = stagesData.find(s => s.id === selectedReviewStageId);
-          if (!stage) return null;
-
-          return (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-              <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="absolute inset-0 bg-stone-900/60 backdrop-blur-sm"
-                onClick={() => setSelectedReviewStageId(null)}
-              />
-              <motion.div 
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                className="bg-[#FCFAF7] border border-stone-200/60 rounded-3xl w-full max-w-md overflow-hidden shadow-2xl relative z-10 flex flex-col max-h-[85vh]"
-              >
-                <div className="p-6 border-b border-stone-100 flex items-center justify-between shrink-0">
-                  <div className="flex items-center gap-2">
-                    <Sparkles className="text-[#707040] animate-pulse" size={18} />
-                    <h3 className="text-base font-bold text-stone-800">{stage.name}</h3>
-                  </div>
-                  <button 
-                    onClick={() => setSelectedReviewStageId(null)}
-                    className="p-1.5 rounded-full hover:bg-stone-100 text-stone-400 hover:text-stone-600 transition-colors cursor-pointer"
-                  >
-                    <X size={18} />
-                  </button>
-                </div>
-                
-                <div className="p-6 overflow-y-auto space-y-6 flex-1 scrollbar-thin text-center">
-                  <span className="inline-flex items-center gap-1 text-[10px] bg-[#707040]/10 text-[#707040] px-2.5 py-1 font-bold rounded-full uppercase tracking-wider">
-                    {stage.name}
-                  </span>
-                  
-                  <div className="w-48 h-48 mx-auto rounded-3xl overflow-hidden bg-stone-100 border border-stone-200/50 shadow-md">
-                    <img 
-                      src={stage.image} 
-                      alt={stage.title} 
-                      className="w-full h-full object-cover"
-                      referrerPolicy="no-referrer"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <h4 className="text-lg font-bold text-stone-800 font-serif leading-snug">
-                      {stage.title}
-                    </h4>
-                    <p className="text-xs text-stone-600 leading-relaxed font-light px-2 whitespace-pre-line">
-                      {stage.description}
-                    </p>
-                  </div>
-                </div>
-                
-                <div className="p-5 bg-stone-50 border-t border-stone-100 text-center shrink-0">
-                  <button
-                    onClick={() => setSelectedReviewStageId(null)}
-                    className="w-full py-2.5 px-4 bg-[#707040] hover:bg-[#5c5c34] text-white font-bold text-xs tracking-wider rounded-xl transition-all shadow-sm active:scale-98 cursor-pointer"
-                  >
-                    關閉回顧，繼續探索 🍵
-                  </button>
-                </div>
-              </motion.div>
-            </div>
-          );
-        })()}
-
         {selectedLargeImageUrl && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <motion.div 
